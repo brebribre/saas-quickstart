@@ -20,7 +20,7 @@ export function ToastTest() {
   };
 
   return (
-    <div className="flex flex-col gap-4 p-4">
+    <div className="flex flex-col gap-4 p-4 bg-[hsl(var(--background))] rounded-lg border border-[hsl(var(--border))]">
       <h2 className="text-xl font-bold">Toast Test</h2>
       <div className="flex gap-4">
         <Button onClick={showSonnerToast}>Show Sonner Toast</Button>

@@ -102,7 +102,7 @@ const Sidebar = ({ isOpen, toggle, showLogo = false, className }: SidebarProps) 
   return (
     <aside
       className={cn(
-        "fixed inset-y-0 left-0 z-20 flex h-full flex-col border-r bg-background transition-all duration-300 ease-in-out",
+        "fixed inset-y-0 left-0 z-20 flex h-full flex-col border-r border-[hsl(var(--border))] bg-[hsl(var(--background))] shadow-md transition-all duration-300 ease-in-out",
         isOpen ? "w-64" : "w-16",
         className
       )}
