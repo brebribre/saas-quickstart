@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ToastTest } from "@/components/ToastTest";
 
 const Dashboard = () => {
   const { isLoggedIn, user } = useAuth();
@@ -28,6 +29,16 @@ const Dashboard = () => {
                 This is a simplified dashboard with only the essential components.
               </CardDescription>
             </CardHeader>
+          </Card>
+        </div>
+
+        {/* Toast Test Section */}
+        <div>
+          <h2 className="mb-3 text-xl font-semibold">Toast Test</h2>
+          <Card>
+            <CardContent className="p-6">
+              <ToastTest />
+            </CardContent>
           </Card>
         </div>
 
