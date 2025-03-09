@@ -95,7 +95,7 @@ const Login = () => {
       <div className="flex flex-1">
         {/* Hero Section - Left Side */}
         <HeroSection 
-          description="A clean, modern web application template with Vue, Tailwind CSS, and shadcn components."
+          description="One stop solution for your job search. Get your dream job with ease."
           features={loginFeatures}
         />
         

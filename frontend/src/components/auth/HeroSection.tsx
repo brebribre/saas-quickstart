@@ -52,7 +52,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ description, features }) => {
           {description}
         </p>
         <p className="text-sm mb-8 text-gray-400 italic">
-          A modern web application with Vue, Tailwind, and shadcn components.
+          The first AI-powered job search assistant in Indonesia.
         </p>
         
         <div className="space-y-6">

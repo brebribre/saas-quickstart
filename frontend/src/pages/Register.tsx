@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,7 +27,7 @@ const Register = () => {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
-  const { register, loginWithGoogle } = useAuth();
+  const { register, loginWithGoogle, isLoggedIn } = useAuth();
 
   const registerFeatures = [
     {
@@ -46,6 +46,13 @@ const Register = () => {
       description: 'Secure authentication with email and Google login options.'
     }
   ];
+
+  // Redirect to dashboard if user is logged in
+  useEffect(() => {
+    if (isLoggedIn) {
+      navigate("/dashboard");
+    }
+  }, [isLoggedIn, navigate]);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,8 +81,12 @@ const Register = () => {
     try {
       setIsLoading(true);
       await register(name, email, password);
-      // User will need to confirm email before navigating to dashboard
-      // So we'll stay on this page until they confirm
+      // After successful registration, navigate to dashboard if user is logged in
+      // The useEffect hook will handle this redirection
+      toast.success("Registration successful", {
+        description: "Redirecting to dashboard..."
+      });
+      navigate("/dashboard");
     } catch (error) {
       console.error("Registration error:", error);
       // Error is already handled in the register function
@@ -103,7 +114,7 @@ const Register = () => {
       <div className="flex flex-1">
         {/* Hero Section - Left Side */}
         <HeroSection 
-          description="A clean, modern web application template with Vue, Tailwind CSS, and shadcn components."
+          description="One stop solution for your job search. Get your dream job with ease."
           features={registerFeatures}
         />
         

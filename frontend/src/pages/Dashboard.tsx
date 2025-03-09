@@ -26,7 +26,7 @@ const Dashboard = () => {
             <CardHeader className="pb-3">
               <CardTitle>Welcome{user?.name ? `, ${user.name}` : ""}!</CardTitle>
               <CardDescription>
-                This is a simplified dashboard with only the essential components.
+                This is a simplified dashboard with a modern navbar layout.
               </CardDescription>
             </CardHeader>
           </Card>
@@ -47,7 +47,7 @@ const Dashboard = () => {
           <h2 className="mb-3 text-xl font-semibold">Dashboard Content</h2>
           <Card>
             <CardContent className="p-6">
-              <p>This is a clean dashboard with only the login, register, and sidebar components.</p>
+              <p>This is a clean dashboard with a modern navbar layout.</p>
               <p className="mt-2">You can use all shadcn components with Tailwind CSS in this project.</p>
             </CardContent>
           </Card>
