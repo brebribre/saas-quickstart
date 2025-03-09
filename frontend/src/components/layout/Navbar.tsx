@@ -70,6 +70,14 @@ const Navbar = ({ className }: NavbarProps) => {
     ? "bg-white text-black hover:bg-white/90" 
     : "bg-black text-white hover:bg-black/90";
 
+  // Custom dropdown styles
+  const dropdownStyles = {
+    content: "bg-[hsl(var(--background))] border border-[hsl(var(--border))] shadow-lg rounded-md py-2 px-1 min-w-[200px]",
+    label: "font-medium text-[hsl(var(--foreground))] px-2 py-1.5",
+    item: "relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))] focus:bg-[hsl(var(--accent))] focus:text-[hsl(var(--accent-foreground))]",
+    separator: "mx-1 my-1 h-px bg-[hsl(var(--border))]"
+  };
+
   return (
     <nav className={cn(
       "fixed top-0 left-0 right-0 z-50 flex h-16 items-center border-b border-[hsl(var(--border))] bg-[hsl(var(--background))] px-4 shadow-sm",
@@ -126,15 +134,19 @@ const Navbar = ({ className }: NavbarProps) => {
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>
+              <DropdownMenuContent align="end" className={dropdownStyles.content}>
+                <DropdownMenuLabel className={dropdownStyles.label}>
                   <div className="flex flex-col">
                     <span>{user?.name || "User"}</span>
                     <span className="text-xs text-[hsl(var(--muted-foreground))]">{user?.email || ""}</span>
                   </div>
                 </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout}>
+                <DropdownMenuSeparator className={dropdownStyles.separator} />
+                <DropdownMenuItem onClick={() => navigate('/profile')} className={dropdownStyles.item}>
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Profile</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleLogout} className={dropdownStyles.item}>
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Logout</span>
                 </DropdownMenuItem>
@@ -199,6 +211,28 @@ const Navbar = ({ className }: NavbarProps) => {
                       onClick={() => navigate('/register')}
                     >
                       Register
+                    </Button>
+                  </div>
+                )}
+                
+                {/* Profile and Logout buttons for mobile when logged in */}
+                {user && (
+                  <div className="flex flex-col gap-2 mt-4 px-3">
+                    <Button 
+                      variant="outline" 
+                      className="w-full justify-start"
+                      onClick={() => navigate('/profile')}
+                    >
+                      <User className="mr-2 h-4 w-4" />
+                      Profile
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      className="w-full justify-start"
+                      onClick={handleLogout}
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Logout
                     </Button>
                   </div>
                 )}

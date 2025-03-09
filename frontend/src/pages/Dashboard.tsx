@@ -22,8 +22,8 @@ const Dashboard = () => {
         {/* Welcome Section */}
         <div>
           <h1 className="mb-3 text-2xl font-bold">Dashboard</h1>
-          <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/50 dark:to-indigo-950/50">
-            <CardHeader className="pb-3">
+          <Card className="bg-gradient-to-r">
+            <CardHeader>
               <CardTitle>Welcome{user?.name ? `, ${user.name}` : ""}!</CardTitle>
               <CardDescription>
                 This is a simplified dashboard with a modern navbar layout.
@@ -32,15 +32,7 @@ const Dashboard = () => {
           </Card>
         </div>
 
-        {/* Toast Test Section */}
-        <div>
-          <h2 className="mb-3 text-xl font-semibold">Toast Test</h2>
-          <Card>
-            <CardContent className="p-6">
-              <ToastTest />
-            </CardContent>
-          </Card>
-        </div>
+      
 
         {/* Content Section */}
         <div>
