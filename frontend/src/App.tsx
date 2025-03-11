@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
-import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import AuthLayout from "@/components/layout/AuthLayout";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
@@ -13,6 +13,7 @@ import NotFound from "./pages/NotFound";
 import Home from "./pages/Home";
 import AuthCallback from "./pages/AuthCallback";
 import Profile from "./pages/Profile";
+import CreateAgent from "./pages/CreateAgent";
 
 // Configure QueryClient with better error handling and retry logic
 const queryClient = new QueryClient({
@@ -41,20 +42,19 @@ const App = () => (
         <AuthProvider>
           <BrowserRouter>
             <Routes>
+              {/* Public routes */}
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
-              <Route path="/dashboard" element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              } />
-              <Route path="/profile" element={
-                <ProtectedRoute>
-                  <Profile />
-                </ProtectedRoute>
-              } />
+              
+              {/* Protected routes with AuthLayout */}
+              <Route element={<AuthLayout />}>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/create-agent" element={<CreateAgent />} />
+              </Route>
+
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
