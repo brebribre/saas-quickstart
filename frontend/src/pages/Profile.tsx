@@ -140,7 +140,7 @@ const Profile = () => {
           {/* Profile Summary Card */}
           <Card>
             <CardHeader className="text-center">
-              <div className="flex justify-center mb-4">
+            <div className="flex justify-center mb-4">
                 <Avatar className="h-24 w-24">
                   <AvatarFallback className="text-xl bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]">
                     {userInitial}
@@ -163,10 +163,10 @@ const Profile = () => {
               <CardTitle>Edit Profile</CardTitle>
               <CardDescription>
                 Update your profile information to help us personalize your experience.
-              </CardDescription>
-            </CardHeader>
+            </CardDescription>
+          </CardHeader>
             <form onSubmit={handleSubmit}>
-              <CardContent className="space-y-4">
+          <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="fullName">Full Name</Label>
                   <Input
@@ -239,7 +239,7 @@ const Profile = () => {
                       placeholder="https://yourwebsite.com"
                       className={inputClass}
                     />
-                  </div>
+              </div>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -275,9 +275,9 @@ const Profile = () => {
                       placeholder="username"
                       className={inputClass}
                     />
-                  </div>
-                </div>
-                
+              </div>
+            </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="skills">Skills (comma separated)</Label>
                   <Input
@@ -310,8 +310,8 @@ const Profile = () => {
                 </div>
 
                 {/* Resume Upload Section */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
                     <Label>Resume</Label>
                     {resumeFile && (
                       <Button
@@ -334,8 +334,8 @@ const Profile = () => {
                           <p className="text-sm font-medium">{resumeFile.name}</p>
                           <p className="text-xs text-[hsl(var(--muted-foreground))]">
                             {(resumeFile.size / (1024 * 1024)).toFixed(2)} MB
-                          </p>
-                        </div>
+                  </p>
+                </div>
                       </div>
                       <Button type="button" variant="outline" size="sm" className="ml-4">
                         <Download className="h-4 w-4 mr-2" />
@@ -366,25 +366,25 @@ const Profile = () => {
                           onChange={handleFileChange}
                         />
                       </div>
-                    </div>
+              </div>
                   )}
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button 
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Button 
                   type="submit" 
                   disabled={isLoading}
                   className={cn("w-full transition-colors", saveButtonClass)}
                 >
                   {isLoading ? "Saving..." : "Save Profile"}
-                </Button>
-              </CardFooter>
+            </Button>
+          </CardFooter>
             </form>
-          </Card>
+        </Card>
         </div>
       </div>
     </Layout>
   );
 };
 
-export default Profile; 
+export default Profile;

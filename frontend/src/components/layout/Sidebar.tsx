@@ -7,7 +7,11 @@ import {
   LogOut,
   User,
   Moon,
-  Sun
+  Sun,
+  Home,
+  Bot,
+  Settings,
+  PlusCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -71,14 +75,13 @@ const SidebarItem = ({ icon: Icon, label, href, isActive, collapsed = false }: S
   );
 };
 
-const Sidebar = ({ isOpen, toggle, showLogo = false, className }: SidebarProps) => {
+const Sidebar = ({ isOpen, toggle, showLogo = true, className }: SidebarProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const currentPath = location.pathname;
   
-  // Memoize the user initial to prevent unnecessary re-renders
   const userInitial = React.useMemo(() => {
     if (user?.name && user.name.trim()) {
       return user.name.charAt(0).toUpperCase();
@@ -91,13 +94,20 @@ const Sidebar = ({ isOpen, toggle, showLogo = false, className }: SidebarProps) 
     navigate("/");
   };
 
-  // Memoize the avatar fallback content
   const avatarFallback = React.useMemo(() => {
     if (userInitial) {
       return userInitial;
     }
     return <User className="h-4 w-4" />;
   }, [userInitial]);
+
+  const navItems = [
+    { icon: Home, label: "Home", href: "/" },
+    { icon: FolderKanban, label: "Dashboard", href: "/dashboard" },
+    { icon: Bot, label: "My Agents", href: "/agents" },
+    { icon: PlusCircle, label: "Create Agent", href: "/create-agent" },
+    { icon: Settings, label: "Settings", href: "/settings" },
+  ];
 
   return (
     <aside
@@ -109,13 +119,15 @@ const Sidebar = ({ isOpen, toggle, showLogo = false, className }: SidebarProps) 
     >
       <div className="flex h-full flex-col px-3 py-4">
         {showLogo && (
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-6">
             {isOpen ? (
               <div className="flex items-center gap-2">
-                <span className="text-3xl font-bold font-league-spartan tracking-tight">stratigo</span>
+                <span className="text-2xl font-bold font-league-spartan tracking-tight">stratigo</span>
               </div>
             ) : (
-              <div></div>
+              <div className="w-8 h-8 flex items-center justify-center">
+                <span className="text-xl font-bold">S</span>
+              </div>
             )}
             <Button variant="ghost" size="icon" onClick={toggle} className="h-8 w-8">
               {isOpen ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
@@ -123,119 +135,124 @@ const Sidebar = ({ isOpen, toggle, showLogo = false, className }: SidebarProps) 
           </div>
         )}
         
-        <div className="mt-8 space-y-2">
-          <SidebarItem 
-            icon={FolderKanban}
-            label="Dashboard" 
-            href="/dashboard" 
-            isActive={currentPath === "/dashboard"} 
-            collapsed={!isOpen}
-          />
+        <div className="space-y-2">
+          {navItems.map((item) => (
+            <SidebarItem 
+              key={item.href}
+              icon={item.icon}
+              label={item.label} 
+              href={item.href} 
+              isActive={currentPath === item.href} 
+              collapsed={!isOpen}
+            />
+          ))}
         </div>
-        
-        <div className="mt-8 space-y-2">
-          {isOpen ? (
-            <Button
-              variant="ghost"
-              className="w-full justify-start px-3"
-              onClick={toggleTheme}
-            >
-              {theme === 'dark' ? (
-                <Sun className="mr-2 h-4 w-4" />
-              ) : (
-                <Moon className="mr-2 h-4 w-4" />
-              )}
-              {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
-            </Button>
-          ) : (
-            <TooltipProvider>
-              <Tooltip delayDuration={0}>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={toggleTheme}
-                    aria-label={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-                  >
-                    {theme === 'dark' ? (
-                      <Sun className="h-4 w-4" />
-                    ) : (
-                      <Moon className="h-4 w-4" />
-                    )}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="right">
-                  <p>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
-        </div>
-        
-        {showLogo && user && (
-          <div className="mt-auto">
-            <Separator className="my-4" />
+
+        <div className="mt-auto">
+          <div className="mb-4">
             {isOpen ? (
-              <div className="flex flex-col space-y-4">
-                <div className="flex items-center space-x-3 rounded-md px-3 py-2">
-                  <Avatar className="h-9 w-9">
-                    <AvatarFallback className="bg-primary text-primary-foreground">
-                      {avatarFallback}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex flex-col">
-                    <span className="text-sm font-medium">{user?.name || "User"}</span>
-                    <span className="text-xs text-muted-foreground">{user?.email || ""}</span>
-                  </div>
-                </div>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="justify-start mb-2"
-                  onClick={handleLogout}
-                >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Logout
-                </Button>
-              </div>
+              <Button
+                variant="ghost"
+                className="w-full justify-start px-3"
+                onClick={toggleTheme}
+              >
+                {theme === 'dark' ? (
+                  <Sun className="mr-2 h-4 w-4" />
+                ) : (
+                  <Moon className="mr-2 h-4 w-4" />
+                )}
+                {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+              </Button>
             ) : (
-              <div className="flex flex-col items-center space-y-4 mb-2">
-                <TooltipProvider>
-                  <Tooltip delayDuration={0}>
-                    <TooltipTrigger asChild>
-                      <Avatar className="h-9 w-9">
-                        <AvatarFallback className="bg-primary text-primary-foreground">
-                          {avatarFallback}
-                        </AvatarFallback>
-                      </Avatar>
-                    </TooltipTrigger>
-                    <TooltipContent side="right">
-                      <p>{user?.name || "User"}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                
-                <TooltipProvider>
-                  <Tooltip delayDuration={0}>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={handleLogout}
-                        aria-label="Logout"
-                      >
-                        <LogOut className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent side="right">
-                      <p>Logout</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
+              <TooltipProvider>
+                <Tooltip delayDuration={0}>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={toggleTheme}
+                      aria-label={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                    >
+                      {theme === 'dark' ? (
+                        <Sun className="h-4 w-4" />
+                      ) : (
+                        <Moon className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    <p>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             )}
           </div>
-        )}
+          
+          {user && (
+            <>
+              <Separator className="my-4" />
+              {isOpen ? (
+                <div className="flex flex-col space-y-4">
+                  <div className="flex items-center space-x-3 rounded-md px-3 py-2">
+                    <Avatar className="h-9 w-9">
+                      <AvatarFallback className="bg-primary text-primary-foreground">
+                        {avatarFallback}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium">{user?.name || "User"}</span>
+                      <span className="text-xs text-muted-foreground">{user?.email || ""}</span>
+                    </div>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="justify-start mb-2"
+                    onClick={handleLogout}
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Logout
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center space-y-4 mb-2">
+                  <TooltipProvider>
+                    <Tooltip delayDuration={0}>
+                      <TooltipTrigger asChild>
+                        <Avatar className="h-9 w-9">
+                          <AvatarFallback className="bg-primary text-primary-foreground">
+                            {avatarFallback}
+                          </AvatarFallback>
+                        </Avatar>
+                      </TooltipTrigger>
+                      <TooltipContent side="right">
+                        <p>{user?.name || "User"}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  
+                  <TooltipProvider>
+                    <Tooltip delayDuration={0}>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={handleLogout}
+                          aria-label="Logout"
+                        >
+                          <LogOut className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="right">
+                        <p>Logout</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </aside>
   );

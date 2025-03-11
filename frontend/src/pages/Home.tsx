@@ -22,28 +22,28 @@ const Home = () => {
 
   const features = [
     {
-      title: "Smart Chrome Extension",
-      description: "Automatically fill out job applications with one click. Works across multiple job sites and customizes data for each application.",
+      title: "Ekstensi Chrome Pintar",
+      description: "Isi formulir lamaran kerja secara otomatis dengan satu klik. Bekerja di berbagai situs lowongan kerja dan menyesuaikan data untuk setiap lamaran.",
       icon: Chrome,
-      highlights: ["Form auto-detection", "One-click fill", "Custom mappings", "Multi-site support"]
+      highlights: ["Deteksi formulir otomatis", "Isi dengan satu klik", "Pemetaan data kustom", "Dukungan multi-situs"]
     },
     {
-      title: "AI Cover Letter Generator",
-      description: "Create personalized cover letters in seconds using AI. Tailored to each job posting and your experience.",
+      title: "Generator Surat Lamaran AI",
+      description: "Buat surat lamaran yang dipersonalisasi dalam hitungan detik menggunakan AI. Disesuaikan dengan setiap lowongan kerja dan pengalaman Anda.",
       icon: Bot,
-      highlights: ["Job-specific content", "Professional tone", "Quick generation", "Easy customization"]
+      highlights: ["Konten sesuai lowongan", "Nada profesional", "Generasi cepat", "Mudah dikustomisasi"]
     },
     {
-      title: "Professional CV Builder",
-      description: "Build ATS-friendly resumes with modern templates. Highlight your skills and experience effectively.",
+      title: "Pembuat CV Profesional",
+      description: "Buat CV yang ramah ATS dengan template modern. Tonjolkan keterampilan dan pengalaman Anda secara efektif.",
       icon: FileCheck,
-      highlights: ["ATS-optimized", "Modern templates", "Skills focus", "Easy updates"]
+      highlights: ["Optimasi ATS", "Template modern", "Fokus keterampilan", "Mudah diperbarui"]
     },
     {
-      title: "Application Tracking",
-      description: "Track your job applications, set reminders, and analyze your application success rate.",
+      title: "Pelacakan Lamaran",
+      description: "Lacak lamaran kerja Anda, atur pengingat, dan analisis tingkat keberhasilan lamaran Anda.",
       icon: BarChart3,
-      highlights: ["Status tracking", "Analytics", "Reminders", "Progress insights"]
+      highlights: ["Pelacakan status", "Analitik", "Pengingat", "Wawasan progres"]
     }
   ];
 
@@ -92,22 +92,22 @@ const Home = () => {
               >
                 Stratigo
               </motion.span>
-              <span className="text-[hsl(var(--foreground))]"> - Your Job Search Ally</span>
+              <span className="text-[hsl(var(--foreground))]"> - Asisten Pencarian Kerja Anda</span>
             </h1>
             <p className="text-xl md:text-2xl text-[hsl(var(--muted-foreground))] max-w-3xl mx-auto mb-10">
-              Apply smarter, not harder. Automate your job applications, create personalized cover letters, 
-              and build stunning resumes with our intelligent tools.
+              Lamar lebih cerdas, bukan lebih keras. Otomatiskan lamaran kerja Anda, buat surat lamaran yang dipersonalisasi, 
+              dan buat CV yang mengesankan dengan alat cerdas kami.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button asChild size="lg" className="font-medium">
                 <Link to="/register">
-                  Get Started Free
+                  Mulai Gratis
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
               <Button asChild variant="outline" size="lg" className="font-medium">
                 <Link to="/login">
-                  Sign In
+                  Masuk
                 </Link>
               </Button>
             </div>
@@ -126,10 +126,10 @@ const Home = () => {
             transition={{ duration: 0.3 }}
           >
             <h2 className="text-3xl font-bold text-[hsl(var(--foreground))]">
-              Your Complete Job Application Toolkit
+              Perangkat Lengkap untuk Lamaran Kerja Anda
             </h2>
             <p className="mt-4 text-lg text-[hsl(var(--muted-foreground))]">
-              Everything you need to streamline your job search in one place
+              Semua yang Anda butuhkan untuk mengefisienkan pencarian kerja dalam satu tempat
             </p>
           </motion.div>
 
@@ -194,10 +194,10 @@ const Home = () => {
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.3 }}
         >
-          <h2 className="text-3xl font-bold mb-6 text-[hsl(var(--foreground))]">Ready to simplify your job search?</h2>
+          <h2 className="text-3xl font-bold mb-6 text-[hsl(var(--foreground))]">Siap mempermudah pencarian kerja Anda?</h2>
           <p className="text-[hsl(var(--muted-foreground))] mb-8 max-w-2xl mx-auto">
-            Join thousands of job seekers who are saving time and getting more interviews with Stratigo's 
-            intelligent application tools. Start your efficient job search today - it's free!
+            Bergabung dengan ribuan pencari kerja yang menghemat waktu dan mendapatkan lebih banyak wawancara dengan 
+            alat lamaran cerdas Stratigo. Mulai pencarian kerja efisien Anda hari ini - gratis!
           </p>
           <motion.div
             whileHover={{ scale: 1.02 }}
@@ -205,7 +205,7 @@ const Home = () => {
           >
             <Button asChild size="lg" className="font-medium">
               <Link to="/register">
-                Start Applying Smarter
+                Mulai Melamar Lebih Cerdas
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>

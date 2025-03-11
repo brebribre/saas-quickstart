@@ -5,9 +5,6 @@ from flasgger import Swagger
 from dotenv import load_dotenv
 
 from routes.telegram import telegram_bp
-from routes.apify import apify_bp
-from routes.supabase import supabase_bp
-from routes.shopee import shopee_bp
 
 # Load environment variables
 load_dotenv()
@@ -37,9 +34,6 @@ def health_check():
 
 # Register blueprints
 app.register_blueprint(telegram_bp)
-app.register_blueprint(apify_bp)
-app.register_blueprint(supabase_bp)
-app.register_blueprint(shopee_bp)
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))  # Digital Ocean often uses port 8000
