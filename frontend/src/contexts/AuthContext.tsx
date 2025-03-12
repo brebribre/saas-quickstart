@@ -58,12 +58,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(session);
       setIsLoggedIn(!!session);
       if (session?.user) {
-        console.log("Initial auth - user metadata:", session.user.user_metadata);
         const userName = session.user.user_metadata?.name || 
                         session.user.user_metadata?.full_name || 
                         session.user.user_metadata?.preferred_username || "";
-        console.log("Setting initial user name to:", userName);
-        
         setUser({
           id: session.user.id,
           email: session.user.email || "",

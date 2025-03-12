@@ -11,7 +11,8 @@ import {
   Home,
   Bot,
   Settings,
-  PlusCircle
+  PlusCircle,
+  MessageSquare
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -106,6 +107,7 @@ const Sidebar = ({ isOpen, toggle, showLogo = true, className }: SidebarProps) =
     { icon: FolderKanban, label: "Dashboard", href: "/dashboard" },
     { icon: Bot, label: "My Agents", href: "/agents" },
     { icon: PlusCircle, label: "Create Agent", href: "/create-agent" },
+    { icon: MessageSquare, label: "Quick Chat", href: "/quick-chat" },
     { icon: Settings, label: "Settings", href: "/settings" },
   ];
 

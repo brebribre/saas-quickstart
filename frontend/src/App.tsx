@@ -14,6 +14,7 @@ import Home from "./pages/Home";
 import AuthCallback from "./pages/AuthCallback";
 import Profile from "./pages/Profile";
 import CreateAgent from "./pages/CreateAgent";
+import QuickChat from "./pages/QuickChat";
 
 // Configure QueryClient with better error handling and retry logic
 const queryClient = new QueryClient({
@@ -53,6 +54,7 @@ const App = () => (
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/create-agent" element={<CreateAgent />} />
+                <Route path="/quick-chat" element={<QuickChat />} />
               </Route>
 
               <Route path="*" element={<NotFound />} />
