@@ -1,10 +1,10 @@
-# Vue-Flask-SaaS Quickstart: Frontend
+# SaaS Quickstart: Frontend
 
-The Vue 3 frontend for the Vue-Flask-SaaS Quickstart template.
+The Vue 3 frontend for the SaaS Quickstart template.
 
 ## Overview
 
-This is the frontend portion of the Vue-Flask-SaaS Quickstart template, providing a complete Vue 3 application with Supabase authentication, dashboard layout, and landing page.
+This is the frontend portion of the SaaS Quickstart template, providing a complete Vue 3 application with Supabase authentication, dashboard layout, and landing page.
 
 ## Features
 
@@ -15,9 +15,8 @@ This is the frontend portion of the Vue-Flask-SaaS Quickstart template, providin
 - **Pinia**: State management for Vue applications
 - **Vue Router**: Client-side routing with navigation guards
 - **Tailwind CSS**: Utility-first CSS framework for styling
-- **Dark/Light Mode**: Theme support with system preference detection
+- **vue-shad-cn**: Uses the vue-shad-cn component library
 - **Responsive Design**: Mobile-friendly layouts for all pages
-- **SaaS Components**: Ready-to-use components for SaaS applications
 
 ## Authentication
 
