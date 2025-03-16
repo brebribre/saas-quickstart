@@ -17,7 +17,7 @@ FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:3000')
 # Configure allowed origins based on environment
 ALLOWED_ORIGINS = [FRONTEND_URL]
 if FLASK_ENV == 'production':
-    ALLOWED_ORIGINS.append('https://sellis.netlify.app')
+    ALLOWED_ORIGINS.append('https://www.google.com') # TODO: Change to the production URL
 
 app = Flask(__name__)
 

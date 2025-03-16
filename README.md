@@ -33,6 +33,11 @@ This template provides everything you need to quickly launch a SaaS product:
 - **Development Setup**: Streamlined development with:
   - Concurrent frontend and backend servers
 
+- **Notification System**: Telegram integration for notifications:
+  - Send messages to a configured Telegram chat
+  - Support for Markdown formatting
+  - Simple API endpoint for sending notifications
+
 ## Getting Started
 
 ### Prerequisites
@@ -42,6 +47,7 @@ This template provides everything you need to quickly launch a SaaS product:
 - Python 3.8 or higher
 - pip (Python package installer)
 - Supabase account and project (for authentication)
+- Telegram bot (optional, for notifications)
 
 ### Supabase Setup
 
@@ -49,12 +55,26 @@ This template provides everything you need to quickly launch a SaaS product:
 2. Enable Email Auth in Authentication settings
 3. Copy your project URL and anon key from the API settings
 
+### Telegram Bot Setup (Optional)
+
+1. Create a new bot using [BotFather](https://t.me/botfather) on Telegram
+2. Get your bot token from BotFather
+3. Add your bot to a group chat or start a direct conversation with it
+4. Get the chat ID (you can use the [getUpdates API method](https://core.telegram.org/bots/api#getupdates) or a bot like [@userinfobot](https://t.me/userinfobot))
+
 ### Environment Setup
 
 1. Create a `.env` file in the frontend directory with your Supabase credentials:
 ```
 VITE_SUPABASE_URL=your_supabase_project_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+2. Create a `.env` file in the backend directory with your configuration:
+```
+# Telegram Bot Configuration (optional)
+TELEGRAM_BOT_TOKEN=your_telegram_bot_token
+GROUP_CHAT_ID=your_telegram_group_chat_id
 ```
 
 ### Installation
@@ -124,7 +144,24 @@ npm run build
 npm start
 ```
 
+## API Endpoints
+
+### Telegram Notifications
+
+Send a notification to the configured Telegram chat:
+
 ```
+POST /bot/send/text
+```
+
+Request body:
+```json
+{
+  "message": "Your notification message",
+  "markdown": false
+}
+```
+
 ## Available Scripts
 
 - `npm run dev` - Run both frontend and backend in development mode

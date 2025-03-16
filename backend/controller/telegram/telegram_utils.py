@@ -1,15 +1,17 @@
 import requests
 import time
-from config import Config
+import os
 from dotenv import load_dotenv
 
+# Load environment variables from .env file
 load_dotenv()
 
 
-def send_telegram_notification(message, markdown=None, chat_id=None):
+def send_telegram_notification(message, markdown=None, chat_id=None, bot_token=None):
     print("sending telegram notification: ", message)
-    bot_token = Config.TELEGRAM_BOT_TOKEN
-    chat_id = chat_id or Config.GROUP_CHAT_ID
+    # use TELEGRAM_BOT_TOKEN from .env
+    bot_token = bot_token or os.getenv("TELEGRAM_BOT_TOKEN")
+    chat_id = chat_id or os.getenv("GROUP_CHAT_ID")
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
 
     if markdown:
