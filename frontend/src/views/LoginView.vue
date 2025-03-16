@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { Mail, Lock, Github, LogIn } from 'lucide-vue-next'
+import { Mail, Lock, LogIn } from 'lucide-vue-next'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -28,23 +28,6 @@ const handleLogin = async () => {
       router.push('/app')
     } else {
       errorMessage.value = error || 'Failed to sign in'
-    }
-  } catch (err: any) {
-    errorMessage.value = err.message || 'An unexpected error occurred'
-  } finally {
-    isLoading.value = false
-  }
-}
-
-const handleGithubLogin = async () => {
-  isLoading.value = true
-  errorMessage.value = ''
-
-  try {
-    const { success, error } = await authStore.signInWithOAuth('github')
-    
-    if (!success) {
-      errorMessage.value = error || 'Failed to sign in with GitHub'
     }
   } catch (err: any) {
     errorMessage.value = err.message || 'An unexpected error occurred'
@@ -113,26 +96,6 @@ const goToRegister = () => {
           {{ isLoading ? 'Signing in...' : 'Sign In' }}
         </button>
       </form>
-
-      <div class="relative my-4">
-        <div class="absolute inset-0 flex items-center">
-          <div class="w-full border-t"></div>
-        </div>
-        <div class="relative flex justify-center text-xs uppercase">
-          <span class="bg-card px-2 text-muted-foreground">Or continue with</span>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 gap-2">
-        <button
-          @click="handleGithubLogin"
-          class="flex items-center justify-center rounded-md border bg-background py-2 text-sm font-medium hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-          :disabled="isLoading"
-        >
-          <Github class="mr-2 h-4 w-4" />
-          GitHub
-        </button>
-      </div>
 
       <div class="mt-4 text-center text-sm">
         Don't have an account?
