@@ -1,6 +1,37 @@
-# Stratigo AI Agent Platform
+# Vue-Flask-SaaS Quickstart
 
-A platform for creating and managing AI agents that can connect with external software systems.
+A complete starter template for building SaaS applications with Vue 3, Flask, and Supabase authentication.
+
+## Overview
+
+This template provides everything you need to quickly launch a SaaS product:
+
+- **Frontend**: Vue 3 with TypeScript, Vite, Tailwind CSS, and dark/light mode
+- **Backend**: Flask Python API with a structured project setup
+- **Authentication**: Complete Supabase auth system with login, registration, and profile management
+- **Infrastructure**: Development environment with concurrent frontend and backend servers
+
+## Features
+
+- **Authentication System**: Complete Supabase authentication with:
+  - Email/password login and registration
+  - User profile management
+  - Protected routes and navigation guards
+  - Session persistence across page refreshes
+
+- **Dashboard Layout**: Professional SaaS dashboard with:
+  - Responsive sidebar navigation
+  - User profile section
+  - Dark/light mode support
+  - Mobile-friendly design
+
+- **Landing Page**: Customizable landing page with:
+  - Hero section with call-to-action buttons
+  - Features showcase
+  - Responsive navigation
+
+- **Development Setup**: Streamlined development with:
+  - Concurrent frontend and backend servers
 
 ## Getting Started
 
@@ -10,13 +41,28 @@ A platform for creating and managing AI agents that can connect with external so
 - npm (v7 or higher)
 - Python 3.8 or higher
 - pip (Python package installer)
+- Supabase account and project (for authentication)
+
+### Supabase Setup
+
+1. Create a new project on [Supabase](https://supabase.com)
+2. Enable Email Auth in Authentication settings
+3. Copy your project URL and anon key from the API settings
+
+### Environment Setup
+
+1. Create a `.env` file in the frontend directory with your Supabase credentials:
+```
+VITE_SUPABASE_URL=your_supabase_project_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
 
 ### Installation
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/brebribre/stratigo-job.git
-cd stratigo-job
+git clone https://github.com/brebribre/vue-flask-saas-quickstart.git
+cd vue-flask-saas-quickstart
 ```
 
 2. Install all dependencies (frontend and backend):
@@ -84,11 +130,26 @@ npm run build
 npm start
 ```
 
+## Authentication
+
+The application uses Supabase for authentication:
+
+- **Email/Password Authentication**: Users can register and login with email and password
+- **User Profiles**: User metadata is stored in Supabase user profiles
+- **Protected Routes**: Certain routes require authentication
+- **Session Persistence**: Authentication state is maintained across page refreshes
+
 ## Project Structure
 
 ```
-stratigo-job/
-├── frontend/         # React frontend application
+vue-flask-saas-quickstart/
+├── frontend/         # Vue 3 frontend application
+│   ├── src/          # Source code
+│   │   ├── components/  # Reusable components
+│   │   ├── views/       # Page components
+│   │   ├── stores/      # Pinia stores (including auth)
+│   │   ├── router/      # Vue Router configuration
+│   │   └── lib/         # Utilities and libraries
 ├── backend/         # Flask Python backend application
 │   ├── venv/        # Python virtual environment
 │   └── requirements.txt  # Python dependencies
@@ -105,10 +166,30 @@ stratigo-job/
 - `npm run build` - Build frontend for production
 - `npm start` - Start the production server (Flask backend)
 
+## Customization
+
+### Frontend
+
+- Update the landing page content in `frontend/src/views/HomeView.vue`
+- Modify the navigation in `frontend/src/components/HomeNavbar.vue`
+- Customize the dashboard in `frontend/src/views/DashboardView.vue`
+- Add new routes in `frontend/src/router/index.ts`
+
+### Backend
+
+- Add new API endpoints in the `backend/routes/` directory
+- Configure database models in `backend/models/`
+- Update API documentation in Swagger annotations
+
 ## Notes
 
 - The backend uses a Python virtual environment (venv) to manage dependencies
 - Make sure to have Python and pip installed before running the installation
 - If you're on Windows, you'll need to modify the scripts in package.json to use the appropriate commands for activating the virtual environment
 - The Flask backend runs on port 5000 by default
-- Make sure your backend's requirements.txt is up to date when adding new Python packages
+- The frontend uses Supabase for authentication, ensure your Supabase project is properly configured
+- User authentication state is maintained across page refreshes
+
+## License
+
+MIT
