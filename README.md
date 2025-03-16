@@ -1,12 +1,12 @@
-# Vue-Flask-SaaS Quickstart
+# SaaS Quickstart
 
-A complete starter template for building SaaS applications with Vue 3, Flask, and Supabase authentication.
+A complete starter template for building SaaS applications with Vue 3 with shad-cn and Tailwind CSS, Flask, and Supabase authentication.
 
 ## Overview
 
 This template provides everything you need to quickly launch a SaaS product:
 
-- **Frontend**: Vue 3 with TypeScript, Vite, Tailwind CSS, and dark/light mode
+- **Frontend**: Vue 3 with TypeScript, Vite, Tailwind CSS, and shad-cn
 - **Backend**: Flask Python API with a structured project setup
 - **Authentication**: Complete Supabase auth system with login, registration, and profile management
 - **Infrastructure**: Development environment with concurrent frontend and backend servers
@@ -70,12 +70,6 @@ cd vue-flask-saas-quickstart
 npm run install-all
 ```
 
-This will:
-- Install npm packages for the root project
-- Install npm packages for the frontend
-- Create a Python virtual environment in the backend directory
-- Install Python dependencies from requirements.txt
-
 ### Development
 
 To run both frontend and backend in development mode:
@@ -130,33 +124,7 @@ npm run build
 npm start
 ```
 
-## Authentication
-
-The application uses Supabase for authentication:
-
-- **Email/Password Authentication**: Users can register and login with email and password
-- **User Profiles**: User metadata is stored in Supabase user profiles
-- **Protected Routes**: Certain routes require authentication
-- **Session Persistence**: Authentication state is maintained across page refreshes
-
-## Project Structure
-
 ```
-vue-flask-saas-quickstart/
-├── frontend/         # Vue 3 frontend application
-│   ├── src/          # Source code
-│   │   ├── components/  # Reusable components
-│   │   ├── views/       # Page components
-│   │   ├── stores/      # Pinia stores (including auth)
-│   │   ├── router/      # Vue Router configuration
-│   │   └── lib/         # Utilities and libraries
-├── backend/         # Flask Python backend application
-│   ├── venv/        # Python virtual environment
-│   └── requirements.txt  # Python dependencies
-├── package.json     # Root package.json for running both services
-└── README.md       # This file
-```
-
 ## Available Scripts
 
 - `npm run dev` - Run both frontend and backend in development mode
@@ -165,30 +133,6 @@ vue-flask-saas-quickstart/
 - `npm run install-all` - Install dependencies for both frontend and backend (including Python venv setup)
 - `npm run build` - Build frontend for production
 - `npm start` - Start the production server (Flask backend)
-
-## Customization
-
-### Frontend
-
-- Update the landing page content in `frontend/src/views/HomeView.vue`
-- Modify the navigation in `frontend/src/components/HomeNavbar.vue`
-- Customize the dashboard in `frontend/src/views/DashboardView.vue`
-- Add new routes in `frontend/src/router/index.ts`
-
-### Backend
-
-- Add new API endpoints in the `backend/routes/` directory
-- Configure database models in `backend/models/`
-- Update API documentation in Swagger annotations
-
-## Notes
-
-- The backend uses a Python virtual environment (venv) to manage dependencies
-- Make sure to have Python and pip installed before running the installation
-- If you're on Windows, you'll need to modify the scripts in package.json to use the appropriate commands for activating the virtual environment
-- The Flask backend runs on port 5000 by default
-- The frontend uses Supabase for authentication, ensure your Supabase project is properly configured
-- User authentication state is maintained across page refreshes
 
 ## License
 
