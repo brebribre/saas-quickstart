@@ -8,7 +8,7 @@ import AppSidebar from '@/components/AppSidebar.vue'
     <AppSidebar />
     <main class="m-2">
       <SidebarTrigger />
-      <slot />
+      <RouterView />
     </main>
   </SidebarProvider>
 </template>

@@ -26,37 +26,35 @@ import {
   SidebarMenuButton,
   SidebarMenuItem
 } from '@/components/ui/sidebar'
+import { useRouter } from 'vue-router'
 
-// Menu items.
-const items = [
+const router = useRouter()
+
+// Define the type for menu items
+interface MenuItem {
+  title: string
+  route: string
+  icon: any
+}
+
+// Menu items with proper routes
+const items: MenuItem[] = [
   {
     title: 'Home',
-    url: '#',
+    route: '/',
     icon: Home
   },
   {
     title: 'Inbox',
-    url: '#',
+    route: '/inbox',
     icon: Inbox
-  },
-  {
-    title: 'Calendar',
-    url: '#',
-    icon: Calendar
-  },
-  {
-    title: 'Search',
-    url: '#',
-    icon: Search
-  },
-  {
-    title: 'Settings',
-    url: '#',
-    icon: Settings
   }
 ]
 
-
+// Handle navigation
+const navigateTo = (route: string) => {
+  router.push(route)
+}
 </script>
 
 <template>
@@ -67,11 +65,11 @@ const items = [
         <SidebarGroupContent>
           <SidebarMenu>
             <SidebarMenuItem v-for="item in items" :key="item.title">
-              <SidebarMenuButton asChild>
-                <a :href="item.url">
-                  <component :is="item.icon" />
+              <SidebarMenuButton asChild @click="navigateTo(item.route)">
+                <div class="flex items-center cursor-pointer">
+                  <component :is="item.icon" class="mr-2" />
                   <span>{{ item.title }}</span>
-                </a>
+                </div>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
