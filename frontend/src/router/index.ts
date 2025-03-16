@@ -71,6 +71,12 @@ router.beforeEach(async (to, from, next) => {
     // You might want to show a loading screen here
     // For now, we'll just wait a bit and check again
     await new Promise(resolve => setTimeout(resolve, 500))
+    
+    // If still loading after waiting, proceed anyway
+    // The navigation guard will run again if needed once auth is initialized
+    if (authStore.loading) {
+      console.log('Auth still loading, proceeding with navigation')
+    }
   }
   
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)

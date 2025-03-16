@@ -24,9 +24,17 @@ export const useAuthStore = defineStore('auth', () => {
       }
 
       // Set up auth state change listener
-      supabase.auth.onAuthStateChange((_, session) => {
-        user.value = session?.user || null
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+        console.log('Auth state changed:', event)
+        if (session) {
+          user.value = session.user
+        } else if (event === 'SIGNED_OUT') {
+          user.value = null
+        }
       })
+
+      // Return the subscription for cleanup if needed
+      return subscription
     } catch (err: any) {
       console.error('Failed to initialize auth:', err)
       error.value = err.message || 'Failed to initialize authentication'
@@ -130,15 +138,15 @@ export const useAuthStore = defineStore('auth', () => {
     if (!user.value) return null
 
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.value.id)
-        .single()
-
-      if (error) throw error
-      
-      return data
+      // Return the user data directly from the auth store
+      // as Supabase already provides user metadata
+      return {
+        id: user.value.id,
+        email: user.value.email,
+        full_name: user.value.user_metadata?.full_name || '',
+        created_at: user.value.created_at,
+        ...user.value.user_metadata
+      }
     } catch (err: any) {
       console.error('Failed to get user profile:', err)
       return null
@@ -150,15 +158,21 @@ export const useAuthStore = defineStore('auth', () => {
     if (!user.value) return { success: false, error: 'Not authenticated' }
 
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .upsert({
-          id: user.value.id,
-          updated_at: new Date(),
-          ...profile
-        })
+      // Update the user metadata using Supabase Auth API
+      const { data, error } = await supabase.auth.updateUser({
+        data: {
+          ...user.value.user_metadata,
+          ...profile,
+          updated_at: new Date().toISOString()
+        }
+      })
 
       if (error) throw error
+      
+      // Update the local user state
+      if (data && data.user) {
+        user.value = data.user
+      }
       
       return { success: true }
     } catch (err: any) {
