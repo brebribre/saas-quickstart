@@ -1,5 +1,21 @@
 <script setup lang="ts">
-import { Calendar, Home, Inbox, Search, Settings } from "lucide-vue-next"
+import {
+  Calendar,
+  Home,
+  Inbox,
+  Search,
+  Settings,
+  AudioWaveform,
+  BookOpen,
+  Bot,
+  Command,
+  Frame,
+  GalleryVerticalEnd,
+  Map,
+  PieChart,
+  Settings2,
+  SquareTerminal
+} from 'lucide-vue-next'
 import {
   Sidebar,
   SidebarContent,
@@ -8,37 +24,39 @@ import {
   SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
-  SidebarMenuItem,
-} from "@/components/ui/sidebar"
+  SidebarMenuItem
+} from '@/components/ui/sidebar'
 
 // Menu items.
 const items = [
   {
-    title: "Home",
-    url: "#",
-    icon: Home,
+    title: 'Home',
+    url: '#',
+    icon: Home
   },
   {
-    title: "Inbox",
-    url: "#",
-    icon: Inbox,
+    title: 'Inbox',
+    url: '#',
+    icon: Inbox
   },
   {
-    title: "Calendar",
-    url: "#",
-    icon: Calendar,
+    title: 'Calendar',
+    url: '#',
+    icon: Calendar
   },
   {
-    title: "Search",
-    url: "#",
-    icon: Search,
+    title: 'Search',
+    url: '#',
+    icon: Search
   },
   {
-    title: "Settings",
-    url: "#",
-    icon: Settings,
-  },
-];
+    title: 'Settings',
+    url: '#',
+    icon: Settings
+  }
+]
+
+
 </script>
 
 <template>
@@ -48,14 +66,14 @@ const items = [
         <SidebarGroupLabel>Application</SidebarGroupLabel>
         <SidebarGroupContent>
           <SidebarMenu>
-              <SidebarMenuItem v-for="item in items" :key="item.title">
-                <SidebarMenuButton asChild>
-                    <a :href="item.url">
-                      <component :is="item.icon" />
-                      <span>{{item.title}}</span>
-                    </a>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+            <SidebarMenuItem v-for="item in items" :key="item.title">
+              <SidebarMenuButton asChild>
+                <a :href="item.url">
+                  <component :is="item.icon" />
+                  <span>{{ item.title }}</span>
+                </a>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroupContent>
       </SidebarGroup>
