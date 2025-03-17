@@ -139,7 +139,7 @@ def ask():
                     "model": {
                         "type": "string",
                         "description": "The ID of the model to use",
-                        "enum": ["claude-3-7-sonnet-20250219", "claude-3-5-haiku-20241022"],
+                        "enum": ["claude-3-7-sonnet-20250219", "claude-3-5-haiku-20241022", "claude-3-5-sonnet-20241022"],
                         "default": "claude-3-5-haiku-20241022",
                         "example": "claude-3-5-haiku-20241022"
                     },
@@ -155,19 +155,48 @@ def ask():
     ],
     "responses": {
         "200": {
-            "description": "Successful response with agent's final answer",
+            "description": "Successful response with agent's reasoning steps and final answer",
             "schema": {
                 "type": "object",
                 "properties": {
-                    "answer": {
-                        "type": "string",
-                        "description": "The agent's final answer after potentially using tools",
-                        "example": "The result is 47."
+                    "steps": {
+                        "type": "array",
+                        "description": "The reasoning steps taken by the agent, including tools used",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "step": {
+                                    "type": "string",
+                                    "description": "Step identifier",
+                                    "example": "Step 1"
+                                },
+                                "description": {
+                                    "type": "string",
+                                    "description": "Agent's reasoning for this step",
+                                    "example": "I need to multiply 7 by 5 first"
+                                },
+                                "tool_used": {
+                                    "type": "string",
+                                    "description": "Name of the tool used in this step",
+                                    "example": "multiply"
+                                },
+                                "input": {
+                                    "type": "object",
+                                    "description": "Input parameters provided to the tool",
+                                    "example": {"a": 7, "b": 5}
+                                },
+                                "output": {
+                                    "type": ["number", "string"],
+                                    "description": "Result returned by the tool",
+                                    "example": 35
+                                }
+                            }
+                        }
                     },
-                    "model": {
+                    "final_answer": {
                         "type": "string",
-                        "description": "The ID of the model used",
-                        "example": "claude-3-5-haiku-20241022"
+                        "description": "The agent's final answer after completing all reasoning steps",
+                        "example": "The result is 47."
                     }
                 }
             }
@@ -199,27 +228,22 @@ def ask():
     }
 })
 def agent():
-    """
-    POST endpoint: Uses an Agent with possible tool usage (multi-step reasoning).
-    """
     try:
         # Get the request data
         data = request.get_json()
         
         # Validate the request
         if not data or 'question' not in data:
-            return jsonify({'error': 'Question is required'}), 400
+            return jsonify({
+                'error': 'Question is required'
+            }), 400
         
         question = data['question']
         model_id = data.get('model', 'claude-3-5-haiku-20241022')
         tool_categories = data.get('tool_categories', None)
         
-        # Use the agent-based approach, passing the optional tool categories
-        result = langchain_controller.ask_agent(
-            question=question,
-            model_id=model_id,
-            tool_categories=tool_categories
-        )
+        # Process the query using the LangChain agent
+        result = langchain_controller.ask_agent(question, model_id, tool_categories)
         
         # Return the answer
         return jsonify(result), 200
@@ -230,4 +254,6 @@ def agent():
         print(traceback.format_exc())
         
         # Return an error response
-        return jsonify({'error': str(e)}), 500
+        return jsonify({
+            'error': str(e)
+        }), 500

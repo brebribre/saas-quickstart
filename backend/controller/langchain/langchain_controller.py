@@ -168,7 +168,7 @@ class LangChainController:
             :param model_id: The ID of the model to use (default: 'claude-3-5-haiku-20241022')
             :param tool_categories: (Optional) List of tool category names to enable (e.g. ["math"])
                                 If None, all available tools are used.
-            :return: dict with "answer", "model"
+            :return: dict with steps and final answer
             """
             try:
                 model = self.get_model_instance(model_id)
