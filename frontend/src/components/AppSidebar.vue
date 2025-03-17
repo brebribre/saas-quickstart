@@ -5,7 +5,7 @@ import {
   User,
   LogOut,
   Mail,
-  UserCircle
+  BotIcon
 } from 'lucide-vue-next'
 import {
   Sidebar,
@@ -44,6 +44,12 @@ const items: MenuItem[] = [
     title: 'Inbox',
     route: '/inbox',
     icon: Inbox,
+    requiresAuth: true
+  },
+  {
+    title: 'Agents',
+    route: '/agents',
+    icon: BotIcon,
     requiresAuth: true
   },
 ]

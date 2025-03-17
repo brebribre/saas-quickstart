@@ -1,13 +1,13 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import InboxView from '@/views/InboxView.vue'
+import InboxView from '@/containers/InboxView.vue'
 import LoginView from '@/views/LoginView.vue'
 import RegisterView from '@/views/RegisterView.vue'
-import ProfileView from '@/views/ProfileView.vue'
+import ProfileView from '@/containers/ProfileView.vue'
 import { useAuthStore } from '@/stores/auth'
 import AppView from '@/views/AppView.vue'
 import HomeView from '@/views/HomeView.vue'
-import DashboardView from '@/views/DashboardView.vue'
-
+import DashboardView from '@/containers/DashboardView.vue'
+import AgentsContainer from '@/containers/AgentsContainer.vue'
 const router = createRouter({
   history: createWebHistory(),
   routes: [
@@ -38,6 +38,12 @@ const router = createRouter({
             path: '/profile',
             name: 'profile',
             component: ProfileView,
+            meta: { requiresAuth: true }
+          },
+          {
+            path: '/agents',
+            name: 'agents',
+            component: AgentsContainer,
             meta: { requiresAuth: true }
           },
       ]
