@@ -147,7 +147,7 @@ def ask():
                         "type": "array",
                         "items": { "type": "string" },
                         "description": "List of tool categories to enable (e.g. ['math']). If not provided, all tools are available.",
-                        "example": ["math"]
+                        "example": ["math", "web"]
                     }
                 }
             }

@@ -20,6 +20,8 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../../langchain-tools')
 from math_tool import (
     multiply, add, subtract, divide
 )
+from web_search_tool import web_search
+from time_tool import get_current_date, get_current_time
 
 
 load_dotenv()
@@ -36,6 +38,12 @@ class LangChainController:
         self.tools = {
             "math": [
                 multiply, add, subtract, divide
+            ],
+            "web": [
+                web_search
+            ],
+            "time": [
+                get_current_date, get_current_time
             ],
             # Add more tool categories here 
         }
@@ -182,15 +190,14 @@ class LangChainController:
                     for cat_tools in self.tools.values():
                         selected_tools.extend(cat_tools)
                 
-                # 3. Create a ReAct agent using LangGraph
                 agent = create_react_agent(
                     model=model,
                     tools=selected_tools,
                     prompt= (
-                        "You are a helpful assistant. \n\n"
+                        "You are a helpful assistant. \n\n"             
                         "You have access to specialized tools to help you answer the question. \n\n"
-                        "However, you do not need to use these tools if you can answer the question directly."
                         "You don't need to specify that you used a tool, just answer the question."
+                        "Never assume the current date or time, use the tools to get the current date and time."
                     )
                 )
                 
