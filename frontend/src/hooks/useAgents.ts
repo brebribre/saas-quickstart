@@ -34,7 +34,7 @@ export interface UpdateAgentData {
 }
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://127.0.0.1:5000';
-const AGENTS_ENDPOINT = `${API_BASE_URL}/api/v1/agents/`;
+const AGENTS_ENDPOINT = `${API_BASE_URL}/api/v1/agents`;
 
 export const useAgents = () => {
   const loading = ref(false);
@@ -44,7 +44,7 @@ export const useAgents = () => {
     try {
       loading.value = true;
       error.value = null;
-      const response = await axios.post(AGENTS_ENDPOINT, data);
+      const response = await axios.post(`${AGENTS_ENDPOINT}/`, data);
       return response.data;
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to create agent';
