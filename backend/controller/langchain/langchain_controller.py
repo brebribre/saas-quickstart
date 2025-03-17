@@ -1,8 +1,9 @@
 from langchain_openai import ChatOpenAI
 from langchain_anthropic import ChatAnthropic
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.schema import HumanMessage
-from langchain.agents import AgentExecutor, create_openai_tools_agent, create_react_agent
+from langchain.agents import initialize_agent, AgentType
+from langchain.schema import SystemMessage, HumanMessage
+from langchain.memory import ConversationBufferMemory
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 import os
 import sys
@@ -13,10 +14,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../../langchain-tools')
 
 # Import the math tools
 from math_tool import (
-    multiply, add, subtract, divide, power, square_root,
-    calculate_mean, calculate_median, calculate_standard_deviation,
-    calculate_percentage, round_number, calculate_factorial,
-    calculate_logarithm, solve_quadratic_equation
+    multiply, add, subtract, divide
 )
 
 # Load environment variables
@@ -33,10 +31,7 @@ class LangChainController:
         # Initialize tool collections
         self.tools = {
             "math": [
-                multiply, add, subtract, divide, power, square_root,
-                calculate_mean, calculate_median, calculate_standard_deviation,
-                calculate_percentage, round_number, calculate_factorial,
-                calculate_logarithm, solve_quadratic_equation
+                multiply, add, subtract, divide
             ],
             # Add more tool categories here as they are developed
             # "web": [...],
@@ -118,74 +113,3 @@ class LangChainController:
             print(f"Error in ask_question: {str(e)}")
             raise Exception(f"Failed to get answer: {str(e)}")
     
-    def ask_agent(self, query, model_id="claude-3-5-haiku-20241022", tool_categories=None):
-        """
-        Generic function to ask a question to an agent with access to tools.
-        The agent will decide which tools to use based on the query.
-        
-        Args:
-            query (str): The user's query or problem
-            model_id (str): The ID of the model to use
-            tool_categories (list, optional): List of tool categories to use. 
-                                             If None, all available tools will be used.
-        
-        Returns:
-            dict: The response from the agent, including the answer and tool usage information
-        """
-        try:
-            # Get the model instance
-            model = self.get_model_instance(model_id)
-            
-            # Determine which tools to use
-            available_tools = []
-            
-            if tool_categories:
-                # Use only the specified tool categories
-                for category in tool_categories:
-                    if category in self.tools:
-                        available_tools.extend(self.tools[category])
-            else:
-                # Use all available tools
-                for category, tools in self.tools.items():
-                    available_tools.extend(tools)
-            
-            # Create a prompt template for the agent
-            prompt = ChatPromptTemplate.from_messages([
-                ("system", "You are a helpful assistant that can use tools to answer the user's questions."),
-                ("human", "{input}")
-            ])
-            
-            # Create an agent with the available tools using the OpenAI tools format
-            # This format is more compatible with various models
-            agent = create_openai_tools_agent(model, available_tools, prompt)
-            
-            # Create an agent executor
-            agent_executor = AgentExecutor(
-                agent=agent,
-                tools=available_tools,
-                verbose=True,
-                handle_parsing_errors=True
-            )
-            
-            # Run the agent to process the query
-            result = agent_executor.invoke({"input": query})
-            
-            # Determine which tool categories were used
-            used_categories = set()
-            for step in result.get("intermediate_steps", []):
-                tool_name = step[0].tool
-                for category, tools in self.tools.items():
-                    if any(tool_name == t.name for t in tools):
-                        used_categories.add(category)
-            
-            return {
-                "answer": result["output"],
-                "model": model_id,
-                "tool_usage": result.get("intermediate_steps", []),
-                "used_categories": list(used_categories)
-            }
-            
-        except Exception as e:
-            # Log the error and return a generic message
-            print(f"Error in ask_agent: {str(e)}")
-            raise Exception(f"Failed to process query: {str(e)}")
