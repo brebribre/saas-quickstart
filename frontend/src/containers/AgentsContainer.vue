@@ -75,9 +75,9 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="p-4">
+  <div class="p-2">
     <div class="flex justify-between items-center mb-6">
-      <h1 class="scroll-m-20 text-4xl font-bold tracking-tight">AI Agents</h1>
+      <h1 class="scroll-m-20 text-2xl font-bold tracking-tight">AI Agents</h1>
       <div class="flex items-center gap-3">
         <div class="relative">
           <Search class="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -88,7 +88,7 @@ onMounted(() => {
             type="search"
           />
         </div>
-        <Button>
+        <Button @click="$router.push('/agents/create')">
           Create New Agent
         </Button>
       </div>

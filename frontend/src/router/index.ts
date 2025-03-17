@@ -8,6 +8,7 @@ import AppView from '@/views/AppView.vue'
 import HomeView from '@/views/HomeView.vue'
 import DashboardView from '@/containers/DashboardView.vue'
 import AgentsContainer from '@/containers/AgentsContainer.vue'
+import CreateAgentContainer from '@/containers/CreateAgentContainer.vue'
 const router = createRouter({
   history: createWebHistory(),
   routes: [
@@ -44,7 +45,13 @@ const router = createRouter({
             path: '/agents',
             name: 'agents',
             component: AgentsContainer,
-            meta: { requiresAuth: true }
+            meta: { requiresAuth: true },
+          },
+          {
+            path: '/agents/create',
+            name: 'create-agent',
+            component: CreateAgentContainer,
+            meta: { requiresAuth: true },
           },
       ]
     },
