@@ -34,7 +34,7 @@ export interface UpdateAgentData {
 }
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://127.0.0.1:5000';
-const AGENTS_ENDPOINT = `${API_BASE_URL}/api/v1/agents`;
+const AGENTS_ENDPOINT = `${API_BASE_URL}/api/v1/agents/`;
 
 export const useAgents = () => {
   const loading = ref(false);

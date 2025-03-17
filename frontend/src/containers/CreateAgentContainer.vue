@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Check, Circle, Dot } from 'lucide-vue-next';
+import { ArrowLeft, Check, Circle, Dot, Plus, X } from 'lucide-vue-next';
 import type { CreateAgentData } from '@/hooks/useAgents';
 import { useAgents } from '@/hooks/useAgents';
 import { useAuthStore } from '@/stores/auth';
@@ -27,12 +27,15 @@ import {
   StepperTitle,
   StepperTrigger,
 } from '@/components/ui/stepper';
+import { useLangchain } from '@/hooks/useLangchain';
 
 const router = useRouter();
 const { createAgent } = useAgents();
+const { getModels, getTools } = useLangchain();
 const { user } = useAuthStore();
 const { toast } = useToast();
 const currentStep = ref(0);
+const selectedTool = ref('');
 
 const formData = ref<CreateAgentData>({
   name: '',
@@ -44,20 +47,46 @@ const formData = ref<CreateAgentData>({
   configuration: {},
 });
 
-const availableModels = [
-  { id: 'gpt-4', name: 'GPT-4' },
-  { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo' },
-  { id: 'claude-3-opus', name: 'Claude 3 Opus' },
-  { id: 'claude-3-sonnet', name: 'Claude 3 Sonnet' },
-];
+const availableModels = ref<{ id: string; name: string; provider: string; }[]>([]);
+const loadingModels = ref(false);
+const availableTools = ref<Record<string, { name: string; description: string; tools: { name: string; description: string; }[] }>>({});
+const loadingTools = ref(false);
 
-const availableTools = [
-  'Code Analysis',
-  'Web Search',
-  'Data Processing',
-  'File Operations',
-  'API Integration',
-];
+const loadModels = async () => {
+  loadingModels.value = true;
+  try {
+    availableModels.value = await getModels();
+  } catch (error) {
+    toast({
+      title: 'Error',
+      description: 'Failed to load available models',
+      variant: 'destructive',
+    });
+  } finally {
+    loadingModels.value = false;
+  }
+};
+
+const loadTools = async () => {
+  loadingTools.value = true;
+  try {
+    availableTools.value = await getTools();
+  } catch (error) {
+    toast({
+      title: 'Error',
+      description: 'Failed to load available tools',
+      variant: 'destructive',
+    });
+  } finally {
+    loadingTools.value = false;
+  }
+};
+
+// Load data when component mounts
+onMounted(() => {
+  loadModels();
+  loadTools();
+});
 
 const isStepValid = computed(() => {
   switch (currentStep.value) {
@@ -116,6 +145,14 @@ const steps = [
     description: 'Confirm details',
   },
 ];
+
+// Add watcher for selectedTool
+watch(selectedTool, (newValue) => {
+  if (newValue && !formData.value.tool_categories?.includes(newValue)) {
+    formData.value.tool_categories = [...(formData.value.tool_categories || []), newValue];
+    selectedTool.value = ''; // Reset selection
+  }
+});
 </script>
 
 <template>
@@ -201,16 +238,22 @@ const steps = [
             <div class="space-y-2">
               <Label for="model">Language Model</Label>
               <Select v-model="formData.model_id">
-                <SelectTrigger>
+                <SelectTrigger :disabled="loadingModels">
                   <SelectValue placeholder="Select a model" />
                 </SelectTrigger>
                 <SelectContent>
+                  <div v-if="loadingModels" class="p-2 text-center text-sm text-muted-foreground">
+                    Loading models...
+                  </div>
                   <SelectItem
+                    v-else
                     v-for="model in availableModels"
                     :key="model.id"
                     :value="model.id"
                   >
-                    {{ model.name }}
+                    <div class="flex flex-col">
+                      <span>{{ model.name }}</span>
+                    </div>
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -225,22 +268,48 @@ const steps = [
           <CardContent class="pt-6 space-y-4">
             <div class="space-y-2">
               <Label>Tool Categories</Label>
-              <div class="flex flex-wrap gap-2">
-                <Button
-                  v-for="tool in availableTools"
-                  :key="tool"
-                  variant="outline"
-                  :class="{
-                    'bg-primary text-primary-foreground': formData.tool_categories?.includes(tool)
-                  }"
-                  @click="
-                    formData.tool_categories = formData.tool_categories?.includes(tool)
-                      ? formData.tool_categories.filter(t => t !== tool)
-                      : [...(formData.tool_categories || []), tool]
-                  "
-                >
-                  {{ tool }}
-                </Button>
+              <div v-if="loadingTools" class="text-sm text-muted-foreground p-4 text-center">
+                Loading available tools...
+              </div>
+              <div v-else>
+                <!-- Selected Tools -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <Card v-for="key in formData.tool_categories" :key="key" class="relative">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      class="absolute right-2 top-2"
+                      @click="formData.tool_categories = formData.tool_categories?.filter(t => t !== key)"
+                    >
+                      <X class="h-4 w-4" />
+                    </Button>
+                    <CardContent class="pt-6">
+                      <h3 class="font-medium">{{ availableTools[key]?.name }}</h3>
+                      <p class="text-sm text-muted-foreground mt-1">{{ availableTools[key]?.description }}</p>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <!-- Add Tool Button -->
+                <Select v-model="selectedTool" class="w-full">
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a tool category to add" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem
+                      v-for="(category, key) in availableTools"
+                      :key="key"
+                      :value="key"
+                      :disabled="formData.tool_categories?.includes(key)"
+                    >
+                      <div class="flex flex-col">
+                        <span>{{ category.name }}</span>
+                        <span class="text-sm text-muted-foreground">{{ category.description }}</span>
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+
               </div>
             </div>
 
