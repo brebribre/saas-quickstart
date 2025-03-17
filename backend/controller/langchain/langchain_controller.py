@@ -19,25 +19,9 @@ class LangChainController:
         
         # Model configurations
         self.models = {
-            "gpt-3.5-turbo": {
-                "provider": "openai",
-                "name": "gpt-3.5-turbo"
-            },
-            "gpt-4": {
-                "provider": "openai",
-                "name": "gpt-4"
-            },
-            "claude-3-opus": {
+            "claude-3-7-sonnet-20250219": {
                 "provider": "anthropic",
-                "name": "claude-3-opus"
-            },
-            "claude-3-sonnet": {
-                "provider": "anthropic",
-                "name": "claude-3-sonnet"
-            },
-            "gemini-pro": {
-                "provider": "google",
-                "name": "gemini-pro"
+                "name": "claude-3-7-sonnet-20250219"
             }
         }
     
@@ -79,7 +63,7 @@ class LangChainController:
         
         raise ValueError(f"Provider {provider} not supported")
     
-    async def ask_question(self, question, model_id="gpt-3.5-turbo"):
+    def ask_question(self, question, model_id="gpt-3.5-turbo"):
         """Ask a question to the specified model and return the answer."""
         try:
             # Get the appropriate model instance

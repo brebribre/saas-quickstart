@@ -38,6 +38,11 @@ This template provides everything you need to quickly launch a SaaS product:
   - Support for Markdown formatting
   - Simple API endpoint for sending notifications
 
+- **AI Integration**: LangChain integration with multiple AI models:
+  - OpenAI: GPT-3.5 Turbo, GPT-4
+  - Anthropic: Claude 3 Opus, Claude 3 Sonnet, Claude 3.5 Sonnet, Claude 3.7 Opus
+  - Google: Gemini Pro
+
 ## Getting Started
 
 ### Prerequisites
@@ -48,6 +53,7 @@ This template provides everything you need to quickly launch a SaaS product:
 - pip (Python package installer)
 - Supabase account and project (for authentication)
 - Telegram bot (optional, for notifications)
+- API keys for AI providers (optional, for AI features)
 
 ### Supabase Setup
 
@@ -62,6 +68,13 @@ This template provides everything you need to quickly launch a SaaS product:
 3. Add your bot to a group chat or start a direct conversation with it
 4. Get the chat ID (you can use the [getUpdates API method](https://core.telegram.org/bots/api#getupdates) or a bot like [@userinfobot](https://t.me/userinfobot))
 
+### AI Setup (Optional)
+
+1. Get API keys for the AI providers you want to use:
+   - OpenAI API key from [OpenAI](https://platform.openai.com/api-keys)
+   - Anthropic API key from [Anthropic](https://console.anthropic.com/settings/keys)
+   - Google API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
+
 ### Environment Setup
 
 1. Create a `.env` file in the frontend directory with your Supabase credentials:
@@ -75,6 +88,11 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 # Telegram Bot Configuration (optional)
 TELEGRAM_BOT_TOKEN=your_telegram_bot_token
 GROUP_CHAT_ID=your_telegram_group_chat_id
+
+# AI API Keys (optional)
+OPENAI_API_KEY=your_openai_api_key
+ANTHROPIC_API_KEY=your_anthropic_api_key
+GOOGLE_API_KEY=your_google_api_key
 ```
 
 ### Installation
@@ -161,6 +179,31 @@ Request body:
   "markdown": false
 }
 ```
+
+### AI Question Answering
+
+Ask a question to an AI model:
+
+```
+POST /api/v1/ask
+```
+
+Request body:
+```json
+{
+  "question": "Your question here",
+  "model": "claude-3.5-sonnet"
+}
+```
+
+Available models:
+- `gpt-3.5-turbo`
+- `gpt-4`
+- `claude-3-opus`
+- `claude-3-sonnet`
+- `claude-3.5-sonnet`
+- `claude-3.7-opus`
+- `gemini-pro`
 
 ## Available Scripts
 
