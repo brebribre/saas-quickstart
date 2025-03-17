@@ -12,7 +12,6 @@ class LangChainController:
     """Controller for handling LangChain operations with different models."""
     
     def __init__(self):
-        # Initialize API keys from environment variables
         self.openai_api_key = os.getenv("OPENAI_API_KEY")
         self.anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
         self.google_api_key = os.getenv("GOOGLE_API_KEY")
@@ -22,7 +21,16 @@ class LangChainController:
             "claude-3-7-sonnet-20250219": {
                 "provider": "anthropic",
                 "name": "claude-3-7-sonnet-20250219"
-            }
+            },
+            "claude-3-5-haiku-20241022": {
+                "provider": "anthropic",
+                "name": "claude-3-5-haiku-20241022"
+            },
+            "claude-3-5-sonnet-20241022": {
+                "provider": "anthropic",
+                "name": "claude-3-5-sonnet-20241022"
+            },
+            # add more models here
         }
     
     def get_model_instance(self, model_id):
@@ -66,16 +74,12 @@ class LangChainController:
     def ask_question(self, question, model_id="gpt-3.5-turbo"):
         """Ask a question to the specified model and return the answer."""
         try:
-            # Get the appropriate model instance
             model = self.get_model_instance(model_id)
-            
-            # Create a message with the question
+
             message = HumanMessage(content=question)
             
-            # Get the response from the model
             response = model.invoke([message])
             
-            # Extract and return the answer
             return {
                 "answer": response.content,
                 "model": model_id

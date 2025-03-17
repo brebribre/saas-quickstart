@@ -31,10 +31,9 @@ langchain_controller = LangChainController()
                     "model": {
                         "type": "string",
                         "description": "The ID of the model to use",
-                        "enum": ["gpt-3.5-turbo", "gpt-4", "claude-3-opus", "claude-3-sonnet", 
-                                "claude-3.5-sonnet", "claude-3.7-opus", "claude-3.7-sonnet", "gemini-pro"],
-                        "default": "gpt-3.5-turbo",
-                        "example": "gpt-3.5-turbo"
+                        "enum": ["claude-3-7-sonnet-20250219", "claude-3-5-haiku-20241022"],
+                        "default": "claude-3-5-haiku-20241022",
+                        "example": "claude-3-5-haiku-20241022"
                     }
                 }
             }
