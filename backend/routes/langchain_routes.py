@@ -257,3 +257,170 @@ def agent():
         return jsonify({
             'error': str(e)
         }), 500
+
+@langchain_bp.route('/models', methods=['GET'])
+@swag_from({
+    "tags": ["LangChain"],
+    "summary": "Get list of supported AI models",
+    "description": "Returns a list of all supported AI models with their details including ID, name, and provider",
+    "responses": {
+        "200": {
+            "description": "List of supported models",
+            "schema": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "string",
+                            "description": "The model identifier",
+                            "example": "claude-3-5-haiku-20241022"
+                        },
+                        "name": {
+                            "type": "string",
+                            "description": "The actual model name",
+                            "example": "claude-3-5-haiku-20241022"
+                        },
+                        "provider": {
+                            "type": "string",
+                            "description": "The model provider",
+                            "example": "anthropic"
+                        }
+                    }
+                }
+            }
+        },
+        "500": {
+            "description": "Server error",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "string",
+                        "example": "Failed to get supported models: [some error message]"
+                    }
+                }
+            }
+        }
+    }
+})
+def get_models():
+    try:
+        # Get the list of supported models from the controller
+        models = langchain_controller.get_supported_models()
+        
+        # Return the models list
+        return jsonify(models), 200
+    
+    except Exception as e:
+        # Log the error
+        print(f"Error in /models endpoint: {str(e)}")
+        print(traceback.format_exc())
+        
+        # Return an error response
+        return jsonify({
+            'error': f"Failed to get supported models: {str(e)}"
+        }), 500
+
+@langchain_bp.route('/tools', methods=['GET'])
+@swag_from({
+    "tags": ["LangChain"],
+    "summary": "Get list of available tools",
+    "description": "Returns a list of all available tools organized by category with their names and descriptions",
+    "responses": {
+        "200": {
+            "description": "Available tools by category",
+            "schema": {
+                "type": "object",
+                "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                        "name": {
+                            "type": "string",
+                            "description": "Display name of the tool category",
+                            "example": "Math Tools"
+                        },
+                        "description": {
+                            "type": "string",
+                            "description": "Description of the tool category",
+                            "example": "Mathematical operations and calculations"
+                        },
+                        "tools": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "description": "The tool's name",
+                                        "example": "multiply"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "description": "The tool's description",
+                                        "example": "Multiplies two numbers"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "example": {
+                    "math": {
+                        "name": "Math Tools",
+                        "description": "Mathematical operations and calculations",
+                        "tools": [
+                            {
+                                "name": "multiply",
+                                "description": "Multiplies two numbers"
+                            },
+                            {
+                                "name": "add",
+                                "description": "Adds two numbers"
+                            }
+                        ]
+                    },
+                    "web": {
+                        "name": "Web Search",
+                        "description": "Web search and information retrieval",
+                        "tools": [
+                            {
+                                "name": "web_search",
+                                "description": "Search the web for information"
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        "500": {
+            "description": "Server error",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "string",
+                        "example": "Failed to get available tools: [some error message]"
+                    }
+                }
+            }
+        }
+    }
+})
+def get_tools():
+    try:
+        # Get the list of available tools from the controller
+        tools = langchain_controller.get_available_tools()
+        
+        # Return the tools dictionary
+        return jsonify(tools), 200
+    
+    except Exception as e:
+        # Log the error
+        print(f"Error in /tools endpoint: {str(e)}")
+        print(traceback.format_exc())
+        
+        # Return an error response
+        return jsonify({
+            'error': f"Failed to get available tools: {str(e)}"
+        }), 500

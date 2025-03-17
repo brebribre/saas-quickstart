@@ -36,21 +36,31 @@ class LangChainController:
         
         # Initialize tool collections
         self.tools = {
-            "math": [
-                multiply, add, subtract, divide
-            ],
-            "web": [
-                web_search
-            ],
-            "time": [
-                get_current_date, get_current_time
-            ],
-            "wiki": [
-                wikipedia_search
-            ],
-            "drive": [
-                list_allowed_files, get_drive_file_content
-            ]
+            "math": {
+                "name": "Math Tools",
+                "description": "Mathematical operations and calculations",
+                "tools": [multiply, add, subtract, divide]
+            },
+            "web": {
+                "name": "Web Search",
+                "description": "Web search and information retrieval",
+                "tools": [web_search]
+            },
+            "time": {
+                "name": "Time & Date",
+                "description": "Date and time related operations",
+                "tools": [get_current_date, get_current_time]
+            },
+            "wiki": {
+                "name": "Wikipedia",
+                "description": "Wikipedia search and article retrieval",
+                "tools": [wikipedia_search]
+            },
+            "drive": {
+                "name": "Google Drive",
+                "description": "Google Drive file operations",
+                "tools": [list_allowed_files, get_drive_file_content]
+            }
             # Add more tool categories here 
         }
         
@@ -109,7 +119,24 @@ class LangChainController:
         
         raise ValueError(f"Provider {provider} not supported")
     
- 
+    def get_supported_models(self):
+        """Get a list of all supported AI models with their details.
+        
+        Returns:
+            list: A list of dictionaries containing model information:
+                - id: The model identifier
+                - name: The actual model name
+                - provider: The model provider (e.g., 'anthropic', 'openai', 'google')
+        """
+        return [
+            {
+                "id": model_id,
+                "name": config["name"],
+                "provider": config["provider"]
+            }
+            for model_id, config in self.models.items()
+        ]
+    
     def ask_question(self, question, model_id="claude-3-5-haiku-20241022"):
         """Ask a question to the specified model and return the answer."""
         try:
@@ -190,11 +217,11 @@ class LangChainController:
                 if tool_categories:
                     selected_tools = []
                     for cat in tool_categories:
-                        selected_tools.extend(self.tools.get(cat, []))
+                        selected_tools.extend(self.tools.get(cat, [])["tools"])
                 else:
                     selected_tools = []
                     for cat_tools in self.tools.values():
-                        selected_tools.extend(cat_tools)
+                        selected_tools.extend(cat_tools["tools"])
                 
                 agent = create_react_agent(
                     model=model,
@@ -221,3 +248,33 @@ class LangChainController:
             except Exception as e:
                 print(f"Error in ask_agent: {str(e)}")
                 raise Exception(f"Failed to process query: {str(e)}")
+
+    def get_available_tools(self):
+        """Get a list of all available tools organized by category.
+        
+        Returns:
+            dict: A dictionary where:
+                - keys are tool category names (e.g., 'math', 'web')
+                - values are dictionaries containing:
+                    - name: Category display name
+                    - description: Category description
+                    - tools: List of tools with their name and description
+        """
+        available_tools = {}
+        
+        for category, config in self.tools.items():
+            tools_list = []
+            for tool in config["tools"]:
+                tool_info = {
+                    "name": tool.name,
+                    "description": tool.description
+                }
+                tools_list.append(tool_info)
+            
+            available_tools[category] = {
+                "name": config["name"],
+                "description": config["description"],
+                "tools": tools_list
+            }
+        
+        return available_tools
