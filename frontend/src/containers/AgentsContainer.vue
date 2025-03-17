@@ -3,6 +3,13 @@ import { onMounted, ref } from 'vue';
 import { useAgents } from '@/hooks/useAgents';
 import type { Agent } from '@/hooks/useAgents';
 import { useAuthStore } from '@/stores/auth';
+import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { MoreVertical, Pencil, Trash } from 'lucide-vue-next';
 
 const { listUserAgents, deleteAgent, loading, error } = useAgents();
 const { user } = useAuthStore();
@@ -20,7 +27,7 @@ const loadAgents = async () => {
 const handleDeleteAgent = async (agentId: string) => {
   const success = await deleteAgent(agentId);
   if (success) {
-    await loadAgents(); // Refresh the list
+    await loadAgents();
   }
 };
 
@@ -32,94 +39,100 @@ onMounted(() => {
 <template>
   <div class="p-4">
     <div class="flex justify-between items-center mb-6">
-      <h1 class="text-2xl font-bold">AI Agents</h1>
-      <button
-        class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
-      >
+      <h1 class="scroll-m-20 text-4xl font-bold tracking-tight">AI Agents</h1>
+      <Button>
         Create New Agent
-      </button>
+      </Button>
     </div>
 
-    <!-- Loading and Error States -->
-    <div v-if="loading" class="text-center py-8">
-      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
-      <p class="mt-2 text-gray-600 dark:text-gray-400">Loading agents...</p>
+    <!-- Loading State -->
+    <div v-if="loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <Card v-for="i in 3" :key="i">
+        <CardHeader>
+          <Skeleton class="h-4 w-3/4" />
+          <Skeleton class="h-4 w-1/2 mt-2" />
+        </CardHeader>
+        <CardContent>
+          <Skeleton class="h-20 w-full" />
+        </CardContent>
+        <CardFooter>
+          <Skeleton class="h-8 w-full" />
+        </CardFooter>
+      </Card>
     </div>
 
-    <div
-      v-else-if="error"
-      class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded"
-      role="alert"
-    >
-      <p>{{ error }}</p>
-    </div>
+    <!-- Error State -->
+    <Alert v-else-if="error" variant="destructive">
+      <AlertDescription>
+        {{ error }}
+      </AlertDescription>
+    </Alert>
 
     <!-- Agents Grid -->
     <div
       v-else-if="agents.length > 0"
       class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
     >
-      <div
+      <Card
         v-for="agent in agents"
         :key="agent.id"
-        class="border rounded-lg p-4 hover:shadow-lg transition-shadow bg-white dark:bg-gray-800"
+        class="relative"
       >
-        <div class="flex justify-between items-start mb-2">
-          <h3 class="text-lg font-semibold">{{ agent.name }}</h3>
-          <span
-            :class="[
-              'px-2 py-1 text-xs rounded-full',
-              agent.is_active
-                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
-            ]"
-          >
-            {{ agent.is_active ? 'Active' : 'Inactive' }}
-          </span>
-        </div>
+        <CardHeader>
+          <div class="flex justify-between items-start">
+            <div>
+              <CardTitle>{{ agent.name }}</CardTitle>
+              <CardDescription>{{ agent.description || 'No description provided' }}</CardDescription>
+            </div>
+            <Badge :variant="agent.is_active ? 'default' : 'secondary'">
+              {{ agent.is_active ? 'Active' : 'Inactive' }}
+            </Badge>
+          </div>
+        </CardHeader>
 
-        <p class="text-gray-600 dark:text-gray-400 text-sm mb-4">
-          {{ agent.description || 'No description provided' }}
-        </p>
+        <CardContent>
+          <div class="space-y-2 text-sm text-muted-foreground">
+            <p>Model: {{ agent.model_id }}</p>
+            <p v-if="agent.tool_categories?.length">
+              Tools: {{ agent.tool_categories.join(', ') }}
+            </p>
+          </div>
+        </CardContent>
 
-        <div class="text-sm text-gray-500 dark:text-gray-400 mb-4">
-          <p>Model: {{ agent.model_id }}</p>
-          <p v-if="agent.tool_categories?.length" class="mt-1">
-            Tools: {{ agent.tool_categories.join(', ') }}
-          </p>
-        </div>
-
-        <div class="flex justify-end gap-2">
-          <button
-            class="text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
-            @click="$router.push(`/agents/${agent.id}`)"
-          >
-            Edit
-          </button>
-          <button
-            class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200"
-            @click="handleDeleteAgent(agent.id)"
-          >
-            Delete
-          </button>
-        </div>
-      </div>
+        <CardFooter class="flex justify-end">
+          <DropdownMenu>
+            <DropdownMenuTrigger as-child>
+              <Button variant="ghost" size="icon">
+                <MoreVertical class="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem @click="$router.push(`/agents/${agent.id}`)">
+                <Pencil class="h-4 w-4 mr-2" />
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem @click="handleDeleteAgent(agent.id)" class="text-destructive">
+                <Trash class="h-4 w-4 mr-2" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </CardFooter>
+      </Card>
     </div>
 
     <!-- Empty State -->
-    <div
-      v-else
-      class="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-lg"
-    >
-      <p class="text-gray-600 dark:text-gray-400 mb-4">
-        You haven't created any AI agents yet.
-      </p>
-      <button
-        class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
-      >
-        Create Your First Agent
-      </button>
-    </div>
+    <Card v-else class="text-center p-6">
+      <CardHeader>
+        <CardTitle>No AI Agents Yet</CardTitle>
+        <CardDescription>Get started by creating your first AI agent</CardDescription>
+      </CardHeader>
+      <CardFooter class="flex justify-center">
+        <Button>
+          Create Your First Agent
+        </Button>
+      </CardFooter>
+    </Card>
   </div>
 </template>
 
