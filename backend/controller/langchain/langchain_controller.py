@@ -71,7 +71,7 @@ class LangChainController:
         
         raise ValueError(f"Provider {provider} not supported")
     
-    def ask_question(self, question, model_id="gpt-3.5-turbo"):
+    def ask_question(self, question, model_id="claude-3-5-haiku-20241022"):
         """Ask a question to the specified model and return the answer."""
         try:
             model = self.get_model_instance(model_id)

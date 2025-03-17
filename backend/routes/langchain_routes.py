@@ -53,7 +53,7 @@ langchain_controller = LangChainController()
                     "model": {
                         "type": "string",
                         "description": "The ID of the model that generated the answer",
-                        "example": "gpt-3.5-turbo"
+                        "example": "claude-3-5-haiku-20241022"
                     }
                 }
             }
@@ -96,7 +96,7 @@ def ask():
             }), 400
         
         question = data['question']
-        model_id = data.get('model', 'gpt-3.5-turbo')
+        model_id = data.get('model', 'claude-3-5-haiku-20241022')
         
         # Ask the question using the LangChain controller
         result = langchain_controller.ask_question(question, model_id)

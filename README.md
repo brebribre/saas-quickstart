@@ -39,9 +39,6 @@ This template provides everything you need to quickly launch a SaaS product:
   - Simple API endpoint for sending notifications
 
 - **AI Integration**: LangChain integration with multiple AI models:
-  - OpenAI: GPT-3.5 Turbo, GPT-4
-  - Anthropic: Claude 3 Opus, Claude 3 Sonnet, Claude 3.5 Sonnet, Claude 3.7 Opus
-  - Google: Gemini Pro
 
 ## Getting Started
 
