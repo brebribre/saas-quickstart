@@ -1,7 +1,7 @@
 import { ref } from 'vue';
 import axios from 'axios';
 
-interface Agent {
+export interface Agent {
   id: string;
   name: string;
   description?: string;
@@ -13,7 +13,7 @@ interface Agent {
   is_active?: boolean;
 }
 
-interface CreateAgentData {
+export interface CreateAgentData {
   name: string;
   description?: string;
   model_id: string;
@@ -23,7 +23,7 @@ interface CreateAgentData {
   configuration?: Record<string, any>;
 }
 
-interface UpdateAgentData {
+export interface UpdateAgentData {
   name?: string;
   description?: string;
   model_id?: string;

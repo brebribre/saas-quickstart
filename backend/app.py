@@ -13,7 +13,7 @@ load_dotenv()
 
 # Environment configuration
 FLASK_ENV = os.getenv('FLASK_ENV', 'development')
-FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:3000')
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:5173')
 
 # Configure allowed origins based on environment
 ALLOWED_ORIGINS = [FRONTEND_URL]
