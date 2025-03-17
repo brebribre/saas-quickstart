@@ -9,8 +9,11 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { MoreVertical, Pencil, Trash } from 'lucide-vue-next';
+import { Avatar } from '@/components/ui/avatar';
+import { MoreVertical, Pencil, Trash, MessageSquare, Bot } from 'lucide-vue-next';
+import { useToast } from '@/components/ui/toast/use-toast';
 
+const { toast } = useToast();
 const { listUserAgents, deleteAgent, loading, error } = useAgents();
 const { user } = useAuthStore();
 const agents = ref<Agent[]>([]);
@@ -25,9 +28,27 @@ const loadAgents = async () => {
 };
 
 const handleDeleteAgent = async (agentId: string) => {
-  const success = await deleteAgent(agentId);
-  if (success) {
-    await loadAgents();
+  try {
+    const success = await deleteAgent(agentId);
+    if (success) {
+      await loadAgents();
+      toast({
+        title: 'Agent deleted',
+        description: 'The agent was successfully deleted.',
+      });
+    } else {
+      toast({
+        title: 'Delete failed',
+        description: 'Failed to delete the agent. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  } catch (err) {
+    toast({
+      title: 'Error',
+      description: err instanceof Error ? err.message : 'An unexpected error occurred',
+      variant: 'destructive',
+    });
   }
 };
 
@@ -80,9 +101,14 @@ onMounted(() => {
       >
         <CardHeader>
           <div class="flex justify-between items-start">
-            <div>
-              <CardTitle>{{ agent.name }}</CardTitle>
-              <CardDescription>{{ agent.description || 'No description provided' }}</CardDescription>
+            <div class="flex items-start gap-3">
+              <Avatar class="h-10 w-10 bg-muted">
+                <Bot class="h-6 w-6" />
+              </Avatar>
+              <div>
+                <CardTitle>{{ agent.name }}</CardTitle>
+                <CardDescription>{{ agent.description || 'No description provided' }}</CardDescription>
+              </div>
             </div>
             <Badge :variant="agent.is_active ? 'default' : 'secondary'">
               {{ agent.is_active ? 'Active' : 'Inactive' }}
@@ -99,7 +125,11 @@ onMounted(() => {
           </div>
         </CardContent>
 
-        <CardFooter class="flex justify-end">
+        <CardFooter class="flex justify-between items-center">
+          <Button variant="outline" size="sm" class="flex items-center gap-2" @click="$router.push(`/chat/${agent.id}`)">
+            <MessageSquare class="h-4 w-4" />
+            Chat
+          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger as-child>
               <Button variant="ghost" size="icon">

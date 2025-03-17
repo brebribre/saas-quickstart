@@ -21,6 +21,8 @@ import {
 import { useRouter } from 'vue-router'
 import { onMounted, computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
+import { Button } from '@/components/ui/button'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -108,47 +110,52 @@ const handleSignOut = async () => {
       <div class="p-4 border-t">
         <div v-if="authStore.isAuthenticated" class="space-y-3">
           <div 
-            class="flex items-center justify-between cursor-pointer hover:bg-muted/50 p-2 rounded-md transition-colors"
+            class="flex items-center justify-between rounded-md transition-colors hover:bg-accent p-2"
             @click="navigateTo('/profile')"
           >
-            <div class="flex items-center">
-              <div class="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center mr-2">
-                <User class="w-4 h-4" />
-              </div>
+            <div class="flex items-center gap-2">
+              <Avatar class="h-8 w-8">
+                <AvatarImage :src="authStore.user?.user_metadata?.avatar_url" />
+                <AvatarFallback>
+                  <User class="h-4 w-4" />
+                </AvatarFallback>
+              </Avatar>
               <div>
-                <p class="text-xs font-medium">{{ authStore.user?.email }}</p>
-                <p class="text-xs text-gray-500 dark:text-gray-400">
+                <p class="text-sm font-medium">{{ authStore.user?.email }}</p>
+                <p class="text-xs text-muted-foreground">
                   {{ authStore.user?.user_metadata?.full_name || 'User' }}
                 </p>
               </div>
             </div>
           </div>
           
-          <button 
+          <Button 
             @click="handleSignOut" 
-            class="w-full py-1 flex items-center justify-center rounded-md border border-gray-200 dark:border-gray-700 hover:bg-muted/50 transition-colors"
+            variant="outline"
+            class="w-full justify-start"
           >
-            <LogOut class="w-4 h-4 mr-2" />
-            <span class="text-sm">Sign Out</span>
-          </button>
+            <LogOut class="h-4 w-4 mr-2" />
+            Sign Out
+          </Button>
         </div>
         
         <div v-else class="space-y-2">
-          <button 
+          <Button 
             @click="handleSignIn" 
-            class="w-full py-1 flex items-center justify-center py-2 px-4 rounded-md bg-primary text-primary-foreground hover:bg-primary/90"
+            class="w-full justify-start"
           >
-            <Mail class="w-4 h-4 mr-2" />
-            <span class="text-sm">Sign In</span>
-          </button>
+            <Mail class="h-4 w-4 mr-2" />
+            Sign In
+          </Button>
           
-          <button 
+          <Button 
             @click="handleSignUp" 
-            class="w-full py-1 flex items-center justify-center py-2 px-4 rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/90"
+            variant="secondary"
+            class="w-full justify-start"
           >
-            <User class="w-4 h-4 mr-2" />
-            <span class="text-sm">Sign Up</span>
-          </button>
+            <User class="h-4 w-4 mr-2" />
+            Sign Up
+          </Button>
         </div>
       </div>
     </SidebarFooter>
