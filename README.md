@@ -39,6 +39,22 @@ This template provides everything you need to quickly launch a SaaS product:
   - Simple API endpoint for sending notifications
 
 - **AI Integration**: LangChain integration with multiple AI models:
+  - OpenAI: GPT-3.5 Turbo, GPT-4
+  - Anthropic: Claude 3 Opus, Claude 3 Sonnet, Claude 3.5 Sonnet, Claude 3.7 Opus
+  - Google: Gemini Pro
+
+- **AI Agent System**: Extensible agent framework with tool integration:
+  - Generic agent endpoint that can use any available tools
+  - Automatic tool selection based on query content
+  - Detailed information about tool usage in responses
+  - Easily extensible with new tool categories
+
+- **Math Tools**: LangChain-powered mathematical problem solving:
+  - Basic arithmetic operations (add, subtract, multiply, divide)
+  - Advanced functions (power, square root, logarithm, factorial)
+  - Statistical operations (mean, median, standard deviation)
+  - Equation solving (quadratic equations)
+  - AI-assisted step-by-step solutions
 
 ## Getting Started
 
@@ -201,6 +217,81 @@ Available models:
 - `claude-3.5-sonnet`
 - `claude-3.7-opus`
 - `gemini-pro`
+
+### AI Agent
+
+Send a query to an AI agent that can use various tools:
+
+```
+POST /api/v1/agent
+```
+
+Request body:
+```json
+{
+  "query": "Calculate the square root of 16 and then add it to 10",
+  "model": "claude-3.5-sonnet",
+  "tool_categories": ["math"]
+}
+```
+
+The `tool_categories` field is optional. If not provided, the agent will have access to all available tools and will decide which ones to use based on the query.
+
+The response includes:
+- The answer to the query
+- Information about which tools were used
+- A list of tool categories that were used
+- The model that generated the answer
+
+### Math Problem Solving
+
+Solve a mathematical problem using AI and math tools:
+
+```
+POST /api/v1/math/solve
+```
+
+Request body:
+```json
+{
+  "problem": "Calculate the square root of 16 and then add it to 10",
+  "model": "claude-3.5-sonnet"
+}
+```
+
+The response includes:
+- The solution with step-by-step explanation
+- Information about which math tools were used
+- The model that generated the solution
+
+## Extending with New Tools
+
+To add new tool categories:
+
+1. Create a new file in the `backend/langchain-tools` directory (e.g., `web_tool.py`)
+2. Define your tools using the `@tool` decorator from LangChain
+3. Import and add your tools to the `self.tools` dictionary in `LangChainController.__init__`
+
+Example:
+```python
+# In backend/langchain-tools/web_tool.py
+from langchain_core.tools import tool
+
+@tool
+def search_web(query: str) -> str:
+    """Search the web for information."""
+    # Implementation here
+    return results
+
+# In backend/controller/langchain/langchain_controller.py
+from web_tool import search_web
+
+# In __init__ method
+self.tools = {
+    "math": [...],
+    "web": [search_web]
+}
+```
 
 ## Available Scripts
 
