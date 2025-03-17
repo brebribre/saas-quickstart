@@ -23,7 +23,7 @@ from math_tool import (
 from web_search_tool import web_search
 from time_tool import get_current_date, get_current_time
 from wikipedia_tool import wikipedia_search
-
+from google_drive_tool import list_allowed_files, get_drive_file_content
 load_dotenv()
 
 class LangChainController:
@@ -47,6 +47,9 @@ class LangChainController:
             ],
             "wiki": [
                 wikipedia_search
+            ],
+            "drive": [
+                list_allowed_files, get_drive_file_content
             ]
             # Add more tool categories here 
         }
