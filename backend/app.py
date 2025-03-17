@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 
 from routes.telegram import telegram_bp
 from routes.langchain_routes import langchain_bp
+from routes.ai_agents_routes import ai_agents_bp
 
 # Load environment variables
 load_dotenv()
@@ -103,9 +104,9 @@ def health_check():
     return '', 200  # Return empty response with 200 status code
 
 # Register blueprints
-app.register_blueprint(telegram_bp, url_prefix='/api/v1')
-app.register_blueprint(langchain_bp, url_prefix='/api/v1')
-
+app.register_blueprint(telegram_bp, url_prefix='/api/v1/telegram')
+app.register_blueprint(langchain_bp, url_prefix='/api/v1/langchain')
+app.register_blueprint(ai_agents_bp, url_prefix='/api/v1/agents')
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))  # Digital Ocean often uses port 8000
     app.run(

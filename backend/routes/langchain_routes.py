@@ -114,7 +114,7 @@ def ask():
             'error': str(e)
         }), 500 
 
-@langchain_bp.route('/agent', methods=['POST'])
+@langchain_bp.route('/agent/ask', methods=['POST'])
 @swag_from({
     "tags": ["LangChain"],
     "summary": "Ask a question using a ReAct Agent (multi-step with tools)",
