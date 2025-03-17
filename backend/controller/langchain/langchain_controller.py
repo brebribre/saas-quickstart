@@ -22,7 +22,7 @@ from math_tool import (
 )
 from web_search_tool import web_search
 from time_tool import get_current_date, get_current_time
-
+from wikipedia_tool import wikipedia_search
 
 load_dotenv()
 
@@ -45,6 +45,9 @@ class LangChainController:
             "time": [
                 get_current_date, get_current_time
             ],
+            "wiki": [
+                wikipedia_search
+            ]
             # Add more tool categories here 
         }
         
