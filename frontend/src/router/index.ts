@@ -50,7 +50,7 @@ const router = createRouter({
             
           },
           {
-            path: '/chat/:agentId',
+            path: '/agents/chat/:agentId',
             name: 'agent-chat',
             component: AgentChatContainer,
             meta: { requiresAuth: true },

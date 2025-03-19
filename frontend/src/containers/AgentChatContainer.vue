@@ -14,6 +14,7 @@ import type { AIModel } from '@/hooks/useLangchain'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useToast } from '@/components/ui/toast/use-toast'
 import { useAuthStore } from '@/stores/auth'
+import { marked } from 'marked'
 
 interface ChatMessage {
   role: 'user' | 'assistant'
@@ -139,6 +140,15 @@ const handleModelChange = async (value: string | number | null | Record<string, 
   }
 }
 
+// Add this function to safely render markdown
+const renderMarkdown = (content: string) => {
+  try {
+    return marked(content)
+  } catch (err) {
+    return content
+  }
+}
+
 onMounted(async () => {
   agent.value = await getAgent(agentId)
   availableModels.value = await getModels()
@@ -153,7 +163,7 @@ onMounted(async () => {
   <div class="flex flex-col h-[calc(100vh-4rem)]">
     <!-- Header -->
     <div class="border-b p-4">
-      <div class="flex items-center justify-between">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div class="flex items-center gap-3">
           <Button variant="ghost" size="icon" @click="$router.push('/agents')" class="mr-2">
             <ArrowLeft class="h-4 w-4" />
@@ -162,14 +172,14 @@ onMounted(async () => {
             <Bot class="h-6 w-6 text-primary" />
           </Avatar>
           <div>
-            <h1 class="text-xl font-semibold">{{ agent?.name }}</h1>
-            <p class="text-sm text-muted-foreground">{{ agent?.description }}</p>
+            <h1 class="text-xl font-semibold truncate">{{ agent?.name }}</h1>
+            <p class="text-sm text-muted-foreground line-clamp-1">{{ agent?.description }}</p>
           </div>
         </div>
         <div class="flex items-center gap-2">
-          <span class="text-sm text-muted-foreground">Model:</span>
+          <span class="text-sm text-muted-foreground whitespace-nowrap">Model:</span>
           <Select v-model="selectedModel" @update:model-value="handleModelChange">
-            <SelectTrigger class="w-[200px]">
+            <SelectTrigger class="w-[180px] sm:w-[200px]">
               <SelectValue placeholder="Select a model" />
             </SelectTrigger>
             <SelectContent>
@@ -187,38 +197,42 @@ onMounted(async () => {
     </div>
 
     <!-- Chat Messages -->
-    <ScrollArea class="flex-1 p-4">
+    <ScrollArea class="flex-1 p-2 sm:p-4">
       <div class="space-y-4">
         <div
           v-for="message in messages"
           :key="message.id"
           :class="[
-            'flex gap-3',
+            'flex gap-2 sm:gap-3',
             message.sender === 'user' ? 'justify-end' : 'justify-start'
           ]"
         >
           <div
             :class="[
-              'flex gap-3 max-w-[80%]',
+              'flex gap-2 sm:gap-3',
+              'max-w-[85%] sm:max-w-[75%]',
               message.sender === 'user' ? 'flex-row-reverse' : 'flex-row'
             ]"
           >
             <Avatar :class="[
-              'h-8 w-8 shrink-0',
+              'h-6 w-6 sm:h-8 sm:w-8 shrink-0',
               message.sender === 'ai' ? 'bg-primary/10' : 'bg-secondary'
             ]">
-              <Bot v-if="message.sender === 'ai'" class="h-5 w-5 text-primary" />
-              <User v-else class="h-5 w-5 text-secondary-foreground" />
+              <Bot v-if="message.sender === 'ai'" class="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+              <User v-else class="h-4 w-4 sm:h-5 sm:w-5 text-secondary-foreground" />
             </Avatar>
             <div
               :class="[
-                'rounded-lg px-4 py-2',
+                'rounded-lg px-3 py-2 sm:px-4 sm:py-2',
                 message.sender === 'ai'
-                  ? 'bg-muted'
+                  ? 'bg-muted prose prose-sm dark:prose-invert max-w-none'
                   : 'bg-primary text-primary-foreground'
               ]"
             >
-              <p class="text-sm">{{ message.content }}</p>
+              <div 
+                class="text-sm break-words"
+                v-html="message.sender === 'ai' ? renderMarkdown(message.content) : message.content"
+              ></div>
               <!-- Show reasoning steps for AI messages -->
               <div v-if="message.steps && message.steps.length > 0" class="mt-2 text-xs space-y-1 opacity-80">
                 <div v-for="step in message.steps" :key="step.step" class="border-l-2 pl-2">
@@ -234,15 +248,15 @@ onMounted(async () => {
         </div>
 
         <!-- Loading Animation -->
-        <div v-if="isLoading" class="flex gap-3 justify-start">
-          <Avatar class="h-8 w-8 shrink-0 bg-primary/10">
-            <Bot class="h-5 w-5 text-primary" />
+        <div v-if="isLoading" class="flex gap-2 sm:gap-3 justify-start">
+          <Avatar class="h-6 w-6 sm:h-8 sm:w-8 shrink-0 bg-primary/10">
+            <Bot class="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
           </Avatar>
-          <div class="rounded-lg px-4 py-2 bg-muted">
+          <div class="rounded-lg px-3 py-2 sm:px-4 sm:py-2 bg-muted">
             <div class="flex gap-1">
-              <div class="w-2 h-2 rounded-full bg-primary/50 animate-bounce [animation-delay:-0.3s]"></div>
-              <div class="w-2 h-2 rounded-full bg-primary/50 animate-bounce [animation-delay:-0.15s]"></div>
-              <div class="w-2 h-2 rounded-full bg-primary/50 animate-bounce"></div>
+              <div class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-primary/50 animate-bounce [animation-delay:-0.3s]"></div>
+              <div class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-primary/50 animate-bounce [animation-delay:-0.15s]"></div>
+              <div class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-primary/50 animate-bounce"></div>
             </div>
           </div>
         </div>
@@ -250,7 +264,7 @@ onMounted(async () => {
     </ScrollArea>
 
     <!-- Message Input -->
-    <div class="border-t p-4">
+    <div class="border-t p-2 sm:p-4">
       <form @submit.prevent="sendMessage" class="flex gap-2">
         <Input
           v-model="messageInput"
@@ -268,5 +282,75 @@ onMounted(async () => {
 <style scoped>
 .scroll-area {
   height: 100%;
+}
+
+/* Add these styles to handle markdown content properly */
+.prose {
+  max-width: none;
+}
+
+.prose pre {
+  background-color: rgb(var(--muted));
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+  margin: 0.5rem 0;
+}
+
+.prose code {
+  background-color: rgb(var(--muted));
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+}
+
+.prose ul, .prose ol {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+
+.prose p {
+  margin: 0.5rem 0;
+}
+
+.prose *:first-child {
+  margin-top: 0;
+}
+
+.prose *:last-child {
+  margin-bottom: 0;
+}
+
+/* Add responsive styles for markdown content */
+.prose pre {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.prose img {
+  max-width: 100%;
+  height: auto;
+}
+
+@media (max-width: 640px) {
+  .prose {
+    font-size: 0.875rem;
+  }
+  
+  .prose pre {
+    padding: 0.5rem;
+    margin: 0.25rem 0;
+  }
+  
+  .prose code {
+    padding: 0.125rem 0.25rem;
+  }
+  
+  .prose ul, .prose ol {
+    margin: 0.25rem 0;
+    padding-left: 1.25rem;
+  }
+  
+  .prose p {
+    margin: 0.25rem 0;
+  }
 }
 </style>

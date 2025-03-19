@@ -75,27 +75,28 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="p-2">
-    <div class="flex justify-between items-center mb-6">
+  <div class="p-2 sm:p-4">
+    <!-- Header Section -->
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
       <h1 class="scroll-m-20 text-2xl font-bold tracking-tight">AI Agents</h1>
-      <div class="flex items-center gap-3">
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
         <div class="relative">
           <Search class="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             v-model="searchQuery"
-            class="pl-8 w-[200px]"
+            class="pl-8 w-full sm:w-[200px]"
             placeholder="Search agents..."
             type="search"
           />
         </div>
-        <Button @click="$router.push('/agents/create')">
+        <Button class="w-full sm:w-auto" @click="$router.push('/agents/create')">
           Create New Agent
         </Button>
       </div>
     </div>
 
     <!-- Loading State -->
-    <div v-if="loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div v-if="loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
       <Card v-for="i in 3" :key="i">
         <CardHeader class="pb-2">
           <div class="flex justify-between items-center gap-2">
@@ -142,7 +143,7 @@ onMounted(() => {
     <!-- Agents Grid -->
     <div
       v-else-if="filteredAgents.length > 0"
-      class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+      class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4"
     >
       <Card
         v-for="agent in filteredAgents"
@@ -155,7 +156,7 @@ onMounted(() => {
               <Avatar class="h-8 w-8 bg-primary/10">
                 <Bot class="h-5 w-5 text-primary" />
               </Avatar>
-              <CardTitle class="text-lg leading-8">{{ agent.name }}</CardTitle>
+              <CardTitle class="text-base sm:text-lg leading-8 truncate">{{ agent.name }}</CardTitle>
             </div>
             <Badge :variant="agent.is_active ? 'default' : 'secondary'" class="shrink-0 text-xs">
               {{ agent.is_active ? 'Active' : 'Inactive' }}
@@ -166,20 +167,19 @@ onMounted(() => {
         <CardContent class="pb-3">
           <div class="space-y-2">
             <div v-if="agent.description" class="flex gap-1.5 text-xs">
-            
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <p class="line-clamp-1 cursor-help">{{ agent.description }}</p>
+                    <p class="line-clamp-2 sm:line-clamp-1 cursor-help text-xs sm:text-sm">{{ agent.description }}</p>
                   </TooltipTrigger>
-                  <TooltipContent class="max-w-xs whitespace-normal">
+                  <TooltipContent class="max-w-[250px] sm:max-w-xs whitespace-normal">
                     <p>{{ agent.description }}</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             </div>
 
-            <div class="flex items-center gap-1.5 text-xs">
+            <div class="flex items-center gap-1.5 text-xs sm:text-sm flex-wrap">
               <span class="font-medium shrink-0">Model:</span>
               <Badge variant="outline" class="bg-primary/5 text-xs h-5">
                 {{ agent.model_id }}
@@ -187,7 +187,7 @@ onMounted(() => {
             </div>
 
             <div v-if="agent.tool_categories?.length" class="flex items-center gap-1.5 flex-wrap">
-              <span class="text-xs font-medium shrink-0">Tools:</span>
+              <span class="text-xs sm:text-sm font-medium shrink-0">Tools:</span>
               <div class="flex flex-wrap gap-1">
                 <Badge 
                   v-for="tool in agent.tool_categories" 
@@ -210,7 +210,7 @@ onMounted(() => {
               variant="default" 
               size="sm" 
               class="h-8 text-xs gap-1.5" 
-              @click="$router.push(`/chat/${agent.id}`)"
+              @click="$router.push(`/agents/chat/${agent.id}`)"
             >
               <MessageSquare class="h-3.5 w-3.5" />
               Chat
@@ -263,5 +263,24 @@ onMounted(() => {
 <style scoped>
 .grid {
   transition: all 0.3s ease;
+}
+
+/* Add responsive styles for cards */
+@media (max-width: 640px) {
+  :deep(.card) {
+    padding: 0.75rem;
+  }
+  
+  :deep(.card-header) {
+    padding: 0.75rem;
+  }
+  
+  :deep(.card-content) {
+    padding: 0.75rem;
+  }
+  
+  :deep(.card-footer) {
+    padding: 0.75rem;
+  }
 }
 </style>
