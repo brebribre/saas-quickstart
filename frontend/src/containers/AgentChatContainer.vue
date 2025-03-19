@@ -14,6 +14,7 @@ import type { AIModel } from '@/hooks/useLangchain'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useToast } from '@/components/ui/toast/use-toast'
 import { useAuthStore } from '@/stores/auth'
+import JsonMessageContent from '@/components/messageMarkdown/JsonMessageContent.vue'
 
 interface ChatMessage {
   role: 'user' | 'assistant'
@@ -244,7 +245,50 @@ const handleModelChange = async (value: string | number | null | Record<string, 
 const formatText = (text: string) => {
   if (!text) return '';
   
-  return text.replace(/\n/g, '<br>');
+  // Format inline code (text within single backticks)
+  const formattedText = text.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>');
+  
+  // Replace line breaks with <br> tags
+  return formattedText.replace(/\n/g, '<br>');
+}
+
+// Function to check if content contains a JSON code block
+const hasJsonCodeBlock = (text: string): boolean => {
+  return text.includes('```json') && text.includes('```');
+}
+
+// Function to extract JSON from a code block
+const extractJsonFromCodeBlock = (text: string): string => {
+  const jsonRegex = /```json\n([\s\S]*?)\n```/;
+  const match = text.match(jsonRegex);
+  
+  if (match && match[1]) {
+    return match[1].trim();
+  }
+  
+  return '';
+}
+
+// Function to get text outside JSON code blocks
+const getTextOutsideJsonBlocks = (text: string): string => {
+  if (!text) return '';
+  
+  // Replace all JSON code blocks with an empty string
+  return text.replace(/```json\n[\s\S]*?\n```/g, '').trim();
+}
+
+// Function to process message content, handling JSON blocks and regular text
+const processMessageContent = (text: string) => {
+  if (!text) return { isJson: false, content: '' };
+  
+  if (hasJsonCodeBlock(text)) {
+    const jsonContent = extractJsonFromCodeBlock(text);
+    if (jsonContent) {
+      return { isJson: true, content: jsonContent };
+    }
+  }
+  
+  return { isJson: false, content: text };
 }
 
 onMounted(async () => {
@@ -320,7 +364,7 @@ onMounted(async () => {
             <div
               :class="[
                 'flex gap-2 sm:gap-3',
-                'max-w-[85%] sm:max-w-[75%]',
+                'max-w-[95%] sm:max-w-[85%]',
                 item.sender === 'user' ? 'flex-row-reverse' : 'flex-row'
               ]"
             >
@@ -335,7 +379,7 @@ onMounted(async () => {
                 :class="[
                   'rounded-lg px-3 py-2 sm:px-4 sm:py-2',
                   item.sender === 'ai'
-                    ? 'bg-muted text-sm break-words'
+                    ? 'bg-muted'
                     : 'bg-primary text-primary-foreground'
                 ]"
               >
@@ -343,10 +387,24 @@ onMounted(async () => {
                   v-if="item.sender === 'user'"
                   class="text-sm break-words"
                 >{{ item.content }}</div>
-                <div 
-                  v-else
-                  v-html="formatText(item.content)"
-                ></div>
+                <template v-else>
+                  <!-- Handle the combined display of JSON and text -->
+                  <div>
+                    <!-- Show the JSON component if there's a JSON code block -->
+                    <JsonMessageContent 
+                      v-if="hasJsonCodeBlock(item.content)"
+                      :content="extractJsonFromCodeBlock(item.content)" 
+                    />
+                    
+                    <!-- Show the text outside of JSON blocks -->
+                    <div 
+                      v-if="getTextOutsideJsonBlocks(item.content)" 
+                      class="text-sm break-words" 
+                      v-html="formatText(getTextOutsideJsonBlocks(item.content))"
+                    ></div>
+                  </div>
+                </template>
+                
                 <!-- Show reasoning steps for AI messages -->
                 <div v-if="item.steps && item.steps.length > 0" class="mt-2 text-xs space-y-1 opacity-80">
                   <div v-for="step in item.steps" :key="step.step" class="border-l-2 pl-2">
@@ -407,5 +465,15 @@ onMounted(async () => {
 
 .break-words {
   overflow-wrap: break-word;
+}
+
+/* Style for inline code elements */
+:deep(.inline-code) {
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 0.875em;
+  padding: 0.2em 0.4em;
+  color: #e83e8c;
 }
 </style>
