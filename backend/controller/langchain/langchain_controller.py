@@ -8,6 +8,11 @@ from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 
 from langgraph.prebuilt import create_react_agent
 
+from controller.supabase.supabase_controller import SupabaseController
+
+supabase_controller = SupabaseController()
+
+
 import asyncio
 
 import os
@@ -232,6 +237,42 @@ class LangChainController:
                     "agent_id": agent_id
                 }
             } if user_id or agent_id else {}
+
+            # Get full history
+            history = supabase_controller.select("ai_agents", filters={"id": agent_id})[0]["chat_history"] or []
+
+            messages = []
+            token_count = 0
+            token_budget = 3000  # Model-dependent, adjust as needed
+            MAX_RECENT_MESSAGES = 5  # Always include the most recent exchanges
+
+            # Always include the N most recent messages
+            recent_messages = history[-MAX_RECENT_MESSAGES:] if len(history) >= MAX_RECENT_MESSAGES else history
+            older_messages = history[:-MAX_RECENT_MESSAGES] if len(history) >= MAX_RECENT_MESSAGES else []
+
+            # Add older messages until we approach token budget
+            for msg in reversed(older_messages):  # Start from more recent older messages
+                # Rough token estimation (3 tokens per word + 4 for role)
+                msg_tokens = len(msg["content"].split()) * 3 + 4
+                if token_count + msg_tokens > token_budget:
+                    break
+                
+                if msg["role"] == "user":
+                    messages.insert(0, HumanMessage(content=msg["content"]))
+                elif msg["role"] == "assistant":
+                    messages.insert(0, AIMessage(content=msg["content"]))
+                
+                token_count += msg_tokens
+
+            # Add all recent messages
+            for msg in recent_messages:
+                if msg["role"] == "user":
+                    messages.append(HumanMessage(content=msg["content"]))
+                elif msg["role"] == "assistant":
+                    messages.append(AIMessage(content=msg["content"]))
+
+            # Add current question
+            messages.append(HumanMessage(content=question))
             
             agent = create_react_agent(
                 model=model,
@@ -241,13 +282,14 @@ class LangChainController:
                     "You have access to specialized tools to help you answer the question. \n\n"
                     "You don't need to specify that you used a tool, just answer the question."
                     "Never assume the current date or time, use the tools to get the current date and time."
+                    "Always write your answer in markdown format and use bullet points and numbered lists when appropriate."
                 )
             )
             
             async def _run_agent():
-                # Pass the config when invoking the agent
+                # Pass the message history instead of just the current question
                 result = await agent.ainvoke(
-                    {"messages": question},
+                    {"messages": messages},
                     config=config
                 )
                 return result

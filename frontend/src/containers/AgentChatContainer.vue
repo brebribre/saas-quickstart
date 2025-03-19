@@ -14,7 +14,6 @@ import type { AIModel } from '@/hooks/useLangchain'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useToast } from '@/components/ui/toast/use-toast'
 import { useAuthStore } from '@/stores/auth'
-import { marked } from 'marked'
 
 interface ChatMessage {
   role: 'user' | 'assistant'
@@ -28,6 +27,32 @@ interface ChatMessage {
     output?: string | number
   }>
 }
+
+// Define a type for date indicators
+interface DateIndicator {
+  id: string;
+  type: 'date';
+  date: Date;
+  
+}
+
+// Define a type for chat messages (already have ChatMessage interface)
+type MessageItem = {
+  id: string | number;
+  content: string;
+  sender: 'user' | 'ai';
+  timestamp: Date;
+  steps?: Array<{
+    step: string;
+    description: string;
+    tool_used?: string;
+    input?: Record<string, any>;
+    output?: string | number;
+  }>;
+};
+
+// Type for either a message or date indicator
+type ChatItem = MessageItem | DateIndicator;
 
 const route = useRoute()
 const agentId = route.params.agentId as string
@@ -46,18 +71,74 @@ const isLoading = ref(false)
 
 const logsContainer = ref()
 
-// Remove the hardcoded messages array and use computed property instead
-const messages = computed(() => {
-  if (!agent.value?.chat_history) return []
+// Add a helper function to format dates
+const formatDate = (date: Date) => {
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
   
-  return (agent.value.chat_history as ChatMessage[]).map((msg: ChatMessage, index: number) => ({
+  if (date.toDateString() === today.toDateString()) {
+    return 'Today';
+  } else if (date.toDateString() === yesterday.toDateString()) {
+    return 'Yesterday';
+  } else {
+    return new Intl.DateTimeFormat('en-US', { 
+      month: 'short', 
+      day: 'numeric',
+      year: date.getFullYear() !== today.getFullYear() ? 'numeric' : undefined 
+    }).format(date);
+  }
+};
+
+// Modified computed property with proper typing
+const messagesWithDateIndicators = computed(() => {
+  // Initialize with a welcome message using agent's created_at timestamp
+  const welcomeMessage: MessageItem = {
+    id: 'welcome',
+    content: `Hello! I'm ${agent.value?.name || 'your AI assistant'}. How can I help you today?`,
+    sender: 'ai',
+    timestamp: agent.value?.created_at ? new Date(agent.value.created_at) : new Date(),
+    steps: []
+  };
+  
+  if (!agent.value?.chat_history) return [welcomeMessage];
+  
+  const chatMessages = (agent.value.chat_history as ChatMessage[]).map((msg: ChatMessage, index: number) => ({
     id: index,
     content: msg.content,
-    sender: msg.role === 'user' ? 'user' : 'ai',
+    sender: msg.role === 'user' ? 'user' : 'ai' as 'user' | 'ai',
     timestamp: new Date(msg.timestamp),
     steps: msg.steps
-  }))
-})
+  }));
+  
+  // Combine welcome message with chat history if needed
+  const allMessages = chatMessages.length === 0 || chatMessages[0].sender !== 'ai' 
+    ? [welcomeMessage, ...chatMessages]
+    : chatMessages;
+  
+  // Add date indicators between messages
+  const result: ChatItem[] = [];
+  let currentDate: Date | null = null;
+  
+  allMessages.forEach(message => {
+    const messageDate = new Date(message.timestamp);
+    messageDate.setHours(0, 0, 0, 0);  // Reset time to start of day
+    
+    if (!currentDate || messageDate.getTime() !== currentDate.getTime()) {
+      currentDate = messageDate;
+      // Add a date indicator
+      result.push({
+        id: `date-${messageDate.getTime()}`,
+        type: 'date',
+        date: messageDate
+      });
+    }
+    
+    result.push(message);
+  });
+  
+  return result;
+});
 
 const scrollToBottom = () => {
   nextTick(() => {
@@ -101,7 +182,7 @@ const sendMessage = async () => {
     scrollToBottom()
 
     // Get AI response
-    const response = await askAgent(
+    await askAgent(
       question,
       userId,
       agent.value.id,
@@ -160,13 +241,10 @@ const handleModelChange = async (value: string | number | null | Record<string, 
   }
 }
 
-// Add this function to safely render markdown
-const renderMarkdown = (content: string) => {
-  try {
-    return marked(content)
-  } catch (err) {
-    return content
-  }
+const formatText = (text: string) => {
+  if (!text) return '';
+  
+  return text.replace(/\n/g, '<br>');
 }
 
 onMounted(async () => {
@@ -221,57 +299,70 @@ onMounted(async () => {
     </div>
 
     <!-- Chat Messages -->
-    <ScrollArea ref="logsContainer" class="flex-1 p-2 sm:p-4">
+    <ScrollArea ref="logsContainer" class="flex-1 px-2 mb-2 sm:px-4">
       <div class="space-y-4">
-        <div
-          v-for="message in messages"
-          :key="message.id"
-          :class="[
-            'flex gap-2 sm:gap-3',
-            message.sender === 'user' ? 'justify-end' : 'justify-start'
-          ]"
-        >
-          <div
-            :class="[
-              'flex gap-2 sm:gap-3',
-              'max-w-[85%] sm:max-w-[75%]',
-              message.sender === 'user' ? 'flex-row-reverse' : 'flex-row'
-            ]"
-          >
-            <Avatar :class="[
-              'h-6 w-6 sm:h-8 sm:w-8 shrink-0',
-              message.sender === 'ai' ? 'bg-primary/10' : 'bg-secondary'
-            ]">
-              <Bot v-if="message.sender === 'ai'" class="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-              <User v-else class="h-4 w-4 sm:h-5 sm:w-5 text-secondary-foreground" />
-            </Avatar>
-            <div
-              :class="[
-                'rounded-lg px-3 py-2 sm:px-4 sm:py-2',
-                message.sender === 'ai'
-                  ? 'bg-muted prose prose-sm dark:prose-invert max-w-none'
-                  : 'bg-primary text-primary-foreground'
-              ]"
-            >
-              <div 
-                class="text-sm break-words"
-                v-html="message.sender === 'ai' ? renderMarkdown(message.content) : message.content"
-              ></div>
-              <!-- Show reasoning steps for AI messages -->
-              <div v-if="message.steps && message.steps.length > 0" class="mt-2 text-xs space-y-1 opacity-80">
-                <div v-for="step in message.steps" :key="step.step" class="border-l-2 pl-2">
-                  <p><strong>{{ step.step }}:</strong> {{ step.description }}</p>
-                  <p v-if="step.tool_used" class="italic">Used: {{ step.tool_used }}</p>
-                </div>
-              </div>
-              <p class="text-xs mt-1 opacity-70">
-                {{ message.timestamp.toLocaleTimeString() }}
-              </p>
+        <template v-for="item in messagesWithDateIndicators" :key="item.id">
+          <!-- Date separator -->
+          <div v-if="'type' in item" class="flex justify-center my-4">
+            <div class="bg-muted px-3 py-1 rounded-full text-xs text-muted-foreground">
+              {{ formatDate(item.date) }}
             </div>
           </div>
-        </div>
-
-        <!-- Loading Animation -->
+          
+          <!-- Regular message -->
+          <div
+            v-else
+            :class="[
+              'flex gap-2 sm:gap-3',
+              item.sender === 'user' ? 'justify-end' : 'justify-start'
+            ]"
+          >
+            <div
+              :class="[
+                'flex gap-2 sm:gap-3',
+                'max-w-[85%] sm:max-w-[75%]',
+                item.sender === 'user' ? 'flex-row-reverse' : 'flex-row'
+              ]"
+            >
+              <Avatar :class="[
+                'h-6 w-6 sm:h-8 sm:w-8 shrink-0',
+                item.sender === 'ai' ? 'bg-primary/10' : 'bg-secondary'
+              ]">
+                <Bot v-if="item.sender === 'ai'" class="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                <User v-else class="h-4 w-4 sm:h-5 sm:w-5 text-secondary-foreground" />
+              </Avatar>
+              <div
+                :class="[
+                  'rounded-lg px-3 py-2 sm:px-4 sm:py-2',
+                  item.sender === 'ai'
+                    ? 'bg-muted text-sm break-words'
+                    : 'bg-primary text-primary-foreground'
+                ]"
+              >
+                <div 
+                  v-if="item.sender === 'user'"
+                  class="text-sm break-words"
+                >{{ item.content }}</div>
+                <div 
+                  v-else
+                  v-html="formatText(item.content)"
+                ></div>
+                <!-- Show reasoning steps for AI messages -->
+                <div v-if="item.steps && item.steps.length > 0" class="mt-2 text-xs space-y-1 opacity-80">
+                  <div v-for="step in item.steps" :key="step.step" class="border-l-2 pl-2">
+                    <p><strong>{{ step.step }}:</strong> {{ step.description }}</p>
+                    <p v-if="step.tool_used" class="italic">Used: {{ step.tool_used }}</p>
+                  </div>
+                </div>
+                <p class="text-xs mt-1 opacity-70">
+                  {{ item.timestamp.toLocaleTimeString() }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </template>
+        
+        <!-- Loading Animation - moved outside the v-for loop -->
         <div v-if="isLoading" class="flex gap-2 sm:gap-3 justify-start">
           <Avatar class="h-6 w-6 sm:h-8 sm:w-8 shrink-0 bg-primary/10">
             <Bot class="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
@@ -308,73 +399,13 @@ onMounted(async () => {
   height: 100%;
 }
 
-/* Add these styles to handle markdown content properly */
-.prose {
-  max-width: none;
+/* Simple message styling */
+.text-sm {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
 }
 
-.prose pre {
-  background-color: rgb(var(--muted));
-  padding: 0.75rem;
-  border-radius: 0.375rem;
-  margin: 0.5rem 0;
-}
-
-.prose code {
-  background-color: rgb(var(--muted));
-  padding: 0.125rem 0.25rem;
-  border-radius: 0.25rem;
-}
-
-.prose ul, .prose ol {
-  margin: 0.5rem 0;
-  padding-left: 1.5rem;
-}
-
-.prose p {
-  margin: 0.5rem 0;
-}
-
-.prose *:first-child {
-  margin-top: 0;
-}
-
-.prose *:last-child {
-  margin-bottom: 0;
-}
-
-/* Add responsive styles for markdown content */
-.prose pre {
-  max-width: 100%;
-  overflow-x: auto;
-}
-
-.prose img {
-  max-width: 100%;
-  height: auto;
-}
-
-@media (max-width: 640px) {
-  .prose {
-    font-size: 0.875rem;
-  }
-  
-  .prose pre {
-    padding: 0.5rem;
-    margin: 0.25rem 0;
-  }
-  
-  .prose code {
-    padding: 0.125rem 0.25rem;
-  }
-  
-  .prose ul, .prose ol {
-    margin: 0.25rem 0;
-    padding-left: 1.25rem;
-  }
-  
-  .prose p {
-    margin: 0.25rem 0;
-  }
+.break-words {
+  overflow-wrap: break-word;
 }
 </style>

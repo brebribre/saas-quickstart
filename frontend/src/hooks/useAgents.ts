@@ -12,6 +12,7 @@ export interface Agent {
   configuration?: Record<string, any>;
   chat_history?: Record<string, any>[];
   is_active?: boolean;
+  created_at?: string;
 }
 
 export interface CreateAgentData {
