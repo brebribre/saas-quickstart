@@ -9,6 +9,7 @@ import HomeView from '@/views/HomeView.vue'
 import DashboardView from '@/containers/DashboardView.vue'
 import AgentsContainer from '@/containers/AgentsContainer.vue'
 import CreateAgentContainer from '@/containers/CreateAgentContainer.vue'
+import AgentChatContainer from '@/containers/AgentChatContainer.vue'
 const router = createRouter({
   history: createWebHistory(),
   routes: [
@@ -45,6 +46,13 @@ const router = createRouter({
             path: '/agents',
             name: 'agents',
             component: AgentsContainer,
+            meta: { requiresAuth: true },
+            
+          },
+          {
+            path: '/chat/:agentId',
+            name: 'agent-chat',
+            component: AgentChatContainer,
             meta: { requiresAuth: true },
           },
           {
