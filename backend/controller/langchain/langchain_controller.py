@@ -200,54 +200,59 @@ class LangChainController:
             "final_answer": final_answer
         }
 
-    def ask_agent(self, question, model_id="claude-3-5-haiku-20241022", tool_categories=None):
-            """
-            Use LangGraph's ReAct agent approach to answer a question with multi-step reasoning.
-            The agent decides if it needs any of the provided tools.
+    def ask_agent(self, question, model_id="claude-3-5-haiku-20241022", tool_categories=None, user_id=None):
+        """
+        Use LangGraph's ReAct agent approach to answer a question with multi-step reasoning.
+        The agent decides if it needs any of the provided tools.
+        
+        :param question: The user's query
+        :param model_id: The ID of the model to use (default: 'claude-3-5-haiku-20241022')
+        :param tool_categories: (Optional) List of tool category names to enable (e.g. ["math"])
+                            If None, all available tools are used.
+        :return: dict with steps and final answer
+        """
+        try:
+            model = self.get_model_instance(model_id)
             
-            :param question: The user's query
-            :param model_id: The ID of the model to use (default: 'claude-3-5-haiku-20241022')
-            :param tool_categories: (Optional) List of tool category names to enable (e.g. ["math"])
-                                If None, all available tools are used.
-            :return: dict with steps and final answer
-            """
-            try:
-                model = self.get_model_instance(model_id)
-                
-                if tool_categories:
-                    selected_tools = []
-                    for cat in tool_categories:
-                        selected_tools.extend(self.tools.get(cat, [])["tools"])
-                else:
-                    selected_tools = []
-                    for cat_tools in self.tools.values():
-                        selected_tools.extend(cat_tools["tools"])
-                
-                agent = create_react_agent(
-                    model=model,
-                    tools=selected_tools,
-                    prompt= (
-                        "You are a helpful assistant. \n\n"             
-                        "You have access to specialized tools to help you answer the question. \n\n"
-                        "You don't need to specify that you used a tool, just answer the question."
-                        "Never assume the current date or time, use the tools to get the current date and time."
-                    )
+            if tool_categories:
+                selected_tools = []
+                for cat in tool_categories:
+                    selected_tools.extend(self.tools.get(cat, [])["tools"])
+            else:
+                selected_tools = []
+                for cat_tools in self.tools.values():
+                    selected_tools.extend(cat_tools["tools"])
+            
+            # Create config with user_id
+            config = {"configurable": {"user_id": user_id}} if user_id else {}
+            
+            agent = create_react_agent(
+                model=model,
+                tools=selected_tools,
+                prompt=(
+                    "You are a helpful assistant. \n\n"             
+                    "You have access to specialized tools to help you answer the question. \n\n"
+                    "You don't need to specify that you used a tool, just answer the question."
+                    "Never assume the current date or time, use the tools to get the current date and time."
                 )
-                
-                async def _run_agent():
-                    result = await agent.ainvoke({"messages": question})
-                    return result
-
-                raw_response = asyncio.run(_run_agent())
-                parsed_response = self.parse_agent_response(raw_response)
-
-                print(parsed_response)
-                
-                return parsed_response
+            )
             
-            except Exception as e:
-                print(f"Error in ask_agent: {str(e)}")
-                raise Exception(f"Failed to process query: {str(e)}")
+            async def _run_agent():
+                # Pass the config when invoking the agent
+                result = await agent.ainvoke(
+                    {"messages": question},
+                    config=config
+                )
+                return result
+
+            raw_response = asyncio.run(_run_agent())
+            parsed_response = self.parse_agent_response(raw_response)
+            
+            return parsed_response
+            
+        except Exception as e:
+            print(f"Error in ask_agent: {str(e)}")
+            raise Exception(f"Failed to process query: {str(e)}")
 
     def get_available_tools(self):
         """Get a list of all available tools organized by category.
