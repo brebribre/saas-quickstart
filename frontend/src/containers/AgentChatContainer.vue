@@ -13,6 +13,7 @@ import { useLangchain } from '@/hooks/useLangchain'
 import type { AIModel } from '@/hooks/useLangchain'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useToast } from '@/components/ui/toast/use-toast'
+import { useAuthStore } from '@/stores/auth'
 
 interface ChatMessage {
   role: 'user' | 'assistant'
@@ -33,18 +34,20 @@ const { toast } = useToast()
 
 const { getAgent, updateAgent } = useAgents()
 const { getModels, askAgent } = useLangchain()
+const authStore = useAuthStore()
 
 const availableModels = ref<AIModel[]>([])
 const selectedModel = ref<string>('')
 
 const agent = ref<Agent | null>(null)
 const messageInput = ref('')
+const isLoading = ref(false)
 
 // Remove the hardcoded messages array and use computed property instead
 const messages = computed(() => {
   if (!agent.value?.chat_history) return []
   
-  return agent.value.chat_history.map((msg: ChatMessage, index: number) => ({
+  return (agent.value.chat_history as ChatMessage[]).map((msg: ChatMessage, index: number) => ({
     id: index,
     content: msg.content,
     sender: msg.role === 'user' ? 'user' : 'ai',
@@ -60,22 +63,49 @@ const sendMessage = async () => {
   messageInput.value = '' // Clear input right away for better UX
 
   try {
-    const response = await askAgent({
-      question,
-      agentId: agent.value.id,
-      modelId: agent.value.model_id
-    })
+    const userId = authStore.user?.id
+    if (!userId) {
+      throw new Error('User ID not found')
+    }
 
-    // The chat history will be updated in the backend
-    // Refresh the agent to get the updated chat history
+    // Add user message immediately to chat history
+    const userMessage: ChatMessage = {
+      role: 'user',
+      content: question,
+      timestamp: new Date().toISOString()
+    }
+    
+    // Update agent's chat history locally
+    if (!agent.value.chat_history) {
+      agent.value.chat_history = []
+    }
+    agent.value.chat_history.push(userMessage)
+    isLoading.value = true
+
+    // Get AI response
+    const response = await askAgent(
+      question,
+      userId,
+      agent.value.id,
+      agent.value.model_id
+    )
+
+    // Refresh the agent to get the updated chat history with AI response
     agent.value = await getAgent(agentId)
 
   } catch (err) {
+    // Remove the user message if there was an error
+    if (agent.value?.chat_history) {
+      agent.value.chat_history.pop()
+    }
+    
     toast({
       title: 'Error',
       description: err instanceof Error ? err.message : 'Failed to send message',
       variant: 'destructive',
     })
+  } finally {
+    isLoading.value = false
   }
 }
 
@@ -199,6 +229,20 @@ onMounted(async () => {
               <p class="text-xs mt-1 opacity-70">
                 {{ message.timestamp.toLocaleTimeString() }}
               </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Loading Animation -->
+        <div v-if="isLoading" class="flex gap-3 justify-start">
+          <Avatar class="h-8 w-8 shrink-0 bg-primary/10">
+            <Bot class="h-5 w-5 text-primary" />
+          </Avatar>
+          <div class="rounded-lg px-4 py-2 bg-muted">
+            <div class="flex gap-1">
+              <div class="w-2 h-2 rounded-full bg-primary/50 animate-bounce [animation-delay:-0.3s]"></div>
+              <div class="w-2 h-2 rounded-full bg-primary/50 animate-bounce [animation-delay:-0.15s]"></div>
+              <div class="w-2 h-2 rounded-full bg-primary/50 animate-bounce"></div>
             </div>
           </div>
         </div>
