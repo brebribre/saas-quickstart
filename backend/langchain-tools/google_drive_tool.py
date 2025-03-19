@@ -22,18 +22,21 @@ drive_service = build("drive", "v3", credentials=creds)
 ALLOWED_FILE_IDS = {"1a2YLu3wLWBbx_nAj8Zp_pH4mbLN0AHjQ5_o1CMC1KMs"}  # List of allowed folder IDs
 
 @tool
-def list_allowed_files(user_id: Annotated[str, InjectedToolArg]) -> list:
+def list_allowed_files(
+    user_id: Annotated[str, InjectedToolArg],
+    agent_id: Annotated[str, InjectedToolArg]
+) -> list:
     """
-    Returns a list of file names and IDs that are allowed for a specific user.
+    Returns a list of file names and IDs that are allowed for a specific user and agent.
 
+    :param user_id: The ID of the user making the request (injected)
+    :param agent_id: The ID of the agent making the request (injected)
     :return: List of dictionaries containing 'id' and 'name' for each allowed file.
     """
-
-    # TODO: Implement logic to get allowed files for the user
     try:
         file_details = []
         
-        # Here you would implement logic to get allowed files for the user
+        # TODO: Implement logic to get allowed files for the user-agent combination
         # For now, using the hardcoded ALLOWED_FILE_IDS
         for file_id in ALLOWED_FILE_IDS:
             try:

@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Avatar } from '@/components/ui/avatar'
-import { Bot, Send, User } from 'lucide-vue-next'
+import { Bot, Send, User, ArrowLeft } from 'lucide-vue-next'
 import { useLangchain } from '@/hooks/useLangchain'
 import type { AIModel } from '@/hooks/useLangchain'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -117,6 +117,9 @@ onMounted(async () => {
     <div class="border-b p-4">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-3">
+          <Button variant="ghost" size="icon" @click="$router.push('/agents')" class="mr-2">
+            <ArrowLeft class="h-4 w-4" />
+          </Button>
           <Avatar class="h-10 w-10 bg-primary/10">
             <Bot class="h-6 w-6 text-primary" />
           </Avatar>

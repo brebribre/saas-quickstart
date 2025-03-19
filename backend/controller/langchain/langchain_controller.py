@@ -200,7 +200,7 @@ class LangChainController:
             "final_answer": final_answer
         }
 
-    def ask_agent(self, question, model_id="claude-3-5-haiku-20241022", tool_categories=None, user_id=None):
+    def ask_agent(self, question, model_id="claude-3-5-haiku-20241022", tool_categories=None, user_id=None, agent_id=None):
         """
         Use LangGraph's ReAct agent approach to answer a question with multi-step reasoning.
         The agent decides if it needs any of the provided tools.
@@ -209,6 +209,8 @@ class LangChainController:
         :param model_id: The ID of the model to use (default: 'claude-3-5-haiku-20241022')
         :param tool_categories: (Optional) List of tool category names to enable (e.g. ["math"])
                             If None, all available tools are used.
+        :param user_id: The ID of the user making the request
+        :param agent_id: The ID of the agent being used
         :return: dict with steps and final answer
         """
         try:
@@ -223,8 +225,13 @@ class LangChainController:
                 for cat_tools in self.tools.values():
                     selected_tools.extend(cat_tools["tools"])
             
-            # Create config with user_id
-            config = {"configurable": {"user_id": user_id}} if user_id else {}
+            # Create config with user_id and agent_id
+            config = {
+                "configurable": {
+                    "user_id": user_id,
+                    "agent_id": agent_id
+                }
+            } if user_id or agent_id else {}
             
             agent = create_react_agent(
                 model=model,

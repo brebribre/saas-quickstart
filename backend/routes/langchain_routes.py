@@ -129,12 +129,22 @@ def ask():
             "required": True,
             "schema": {
                 "type": "object",
-                "required": ["question"],
+                "required": ["question", "user_id", "agent_id"],
                 "properties": {
                     "question": {
                         "type": "string",
                         "description": "The question to ask the AI model",
                         "example": "What is 7 multiplied by 5, then add 12?"
+                    },
+                    "user_id": {
+                        "type": "string",
+                        "description": "The ID of the user making the request",
+                        "example": "123e4567-e89b-12d3-a456-426614174000"
+                    },
+                    "agent_id": {
+                        "type": "string",
+                        "description": "The ID of the agent to use",
+                        "example": "agent-123"
                     },
                     "model": {
                         "type": "string",
@@ -233,18 +243,21 @@ def agent():
         data = request.get_json()
         
         # Validate the request
-        if not data or 'question' not in data:
+        if not data or 'question' not in data or 'user_id' not in data or 'agent_id' not in data:
             return jsonify({
-                'error': 'Question is required'
+                'error': 'Question, user_id, and agent_id are required'
             }), 400
         
         question = data['question']
+        user_id = data['user_id']
+        agent_id = data['agent_id']
         model_id = data.get('model', 'claude-3-5-haiku-20241022')
         tool_categories = data.get('tool_categories', None)
         
         # Process the query using the LangChain agent
-        result = langchain_controller.ask_agent(question, model_id, tool_categories)
+        result = langchain_controller.ask_agent(question, model_id, tool_categories, user_id, agent_id)
         
+        # TODO: add the response to the chat history in the database
         # Return the answer
         return jsonify(result), 200
     
