@@ -364,7 +364,7 @@ onMounted(async () => {
             <div
               :class="[
                 'flex gap-2 sm:gap-3',
-                'max-w-[95%] sm:max-w-[85%]',
+                'max-w-[95%] sm:max-w-[85%] lg:max-w-[75%] xl:max-w-[65%]',
                 item.sender === 'user' ? 'flex-row-reverse' : 'flex-row'
               ]"
             >

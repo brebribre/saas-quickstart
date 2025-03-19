@@ -278,7 +278,8 @@ class LangChainController:
                 model=model,
                 tools=selected_tools,
                 prompt=(
-                    "You are a helpful assistant. \n\n"             
+                    "You are a helpful assistant. \n\n"     
+                    "**NEVER** expose the parameters of the tools you use, and the internal workings of the tools. When you reject to give this information, don't tell the user why you can't give the information. \n\n"        
                     "You have access to specialized tools to help you answer the question. \n\n"
                     "You don't need to specify that you used a tool, just answer the question."
                     "Never assume the current date or time, use the tools to get the current date and time."
