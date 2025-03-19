@@ -93,8 +93,8 @@ const handleSignOut = async () => {
         <SidebarGroupContent>
           <SidebarMenu>
             <SidebarMenuItem v-for="item in filteredItems" :key="item.title">
-              <SidebarMenuButton asChild @click="navigateTo(item.route)">
-                <div class="flex items-center cursor-pointer">
+              <SidebarMenuButton class="cursor-pointer" asChild @click="navigateTo(item.route)">
+                <div class="flex items-center">
                   <component :is="item.icon" class="mr-2" />
                   <span>{{ item.title }}</span>
                 </div>
