@@ -2,7 +2,7 @@
 // Inbox view component
 import type { Agent } from '@/hooks/useAgents'
 import { useRoute } from 'vue-router'
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, nextTick } from 'vue'
 import { useAgents } from '@/hooks/useAgents'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -44,6 +44,8 @@ const agent = ref<Agent | null>(null)
 const messageInput = ref('')
 const isLoading = ref(false)
 
+const logsContainer = ref()
+
 // Remove the hardcoded messages array and use computed property instead
 const messages = computed(() => {
   if (!agent.value?.chat_history) return []
@@ -56,6 +58,18 @@ const messages = computed(() => {
     steps: msg.steps
   }))
 })
+
+const scrollToBottom = () => {
+  nextTick(() => {
+    const messagesContainer = document.querySelector('.space-y-4')
+    if (messagesContainer) {
+      const lastMessage = messagesContainer.lastElementChild
+      if (lastMessage) {
+        lastMessage.scrollIntoView({ behavior: 'smooth' })
+      }
+    }
+  })
+}
 
 const sendMessage = async () => {
   if (!messageInput.value.trim() || !agent.value) return
@@ -82,6 +96,9 @@ const sendMessage = async () => {
     }
     agent.value.chat_history.push(userMessage)
     isLoading.value = true
+    
+    // Scroll to bottom after adding user message
+    scrollToBottom()
 
     // Get AI response
     const response = await askAgent(
@@ -93,6 +110,9 @@ const sendMessage = async () => {
 
     // Refresh the agent to get the updated chat history with AI response
     agent.value = await getAgent(agentId)
+    
+    // Scroll to bottom again after getting AI response
+    scrollToBottom()
 
   } catch (err) {
     // Remove the user message if there was an error
@@ -154,6 +174,10 @@ onMounted(async () => {
   availableModels.value = await getModels()
   if (agent.value) {
     selectedModel.value = agent.value.model_id
+    // Scroll to bottom if there are messages when the component is mounted
+    if (agent.value.chat_history?.length) {
+      scrollToBottom()
+    }
   }
 })
 
@@ -197,7 +221,7 @@ onMounted(async () => {
     </div>
 
     <!-- Chat Messages -->
-    <ScrollArea class="flex-1 p-2 sm:p-4">
+    <ScrollArea ref="logsContainer" class="flex-1 p-2 sm:p-4">
       <div class="space-y-4">
         <div
           v-for="message in messages"
