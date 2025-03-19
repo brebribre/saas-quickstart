@@ -2,12 +2,17 @@ from flask import Blueprint, request, jsonify
 from controller.langchain.langchain_controller import LangChainController
 import traceback
 from flasgger import swag_from
+from datetime import datetime
+from controller.supabase.supabase_controller import SupabaseController
 
 # Create a Blueprint for the LangChain routes
 langchain_bp = Blueprint('langchain', __name__)
 
 # Initialize the LangChain controller
 langchain_controller = LangChainController()
+
+# Initialize the Supabase controller
+supabase_controller = SupabaseController()
 
 @langchain_bp.route('/ask', methods=['POST'])
 @swag_from({
@@ -254,10 +259,44 @@ def agent():
         model_id = data.get('model', 'claude-3-5-haiku-20241022')
         tool_categories = data.get('tool_categories', None)
         
+        # Create user message timestamp when request is received
+        user_timestamp = datetime.utcnow().isoformat()
+        
         # Process the query using the LangChain agent
         result = langchain_controller.ask_agent(question, model_id, tool_categories, user_id, agent_id)
         
-        # TODO: add the response to the chat history in the database
+        # Get current agent data to access existing chat history
+        agent_data = supabase_controller.select("ai_agents", filters={"id": agent_id})[0]
+        existing_history = agent_data.get("chat_history", [])
+        
+        # Create new messages
+        new_messages = [
+            {
+                "role": "user",
+                "content": question,
+                "timestamp": user_timestamp
+            },
+            {
+                "role": "assistant",
+                "content": result["final_answer"],
+                "steps": result["steps"],
+                "timestamp": datetime.utcnow().isoformat()
+            }
+        ]
+        
+        # Combine existing history with new messages
+        updated_history = existing_history + new_messages if existing_history else new_messages
+        
+        # Update both chat_history and increment usage_count
+        supabase_controller.update(
+            "ai_agents",
+            {
+                "chat_history": updated_history,
+                "usage_count": agent_data.get("usage_count", 0) + 1
+            },
+            filters={"id": agent_id}
+        )
+        
         # Return the answer
         return jsonify(result), 200
     
