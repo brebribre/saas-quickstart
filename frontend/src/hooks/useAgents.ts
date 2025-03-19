@@ -10,6 +10,7 @@ export interface Agent {
   tool_categories?: string[];
   custom_instructions?: string;
   configuration?: Record<string, any>;
+  chat_history?: Record<string, any>[];
   is_active?: boolean;
 }
 
@@ -21,6 +22,7 @@ export interface CreateAgentData {
   tool_categories?: string[];
   custom_instructions?: string;
   configuration?: Record<string, any>;
+  chat_history?: Record<string, any>[];
 }
 
 export interface UpdateAgentData {

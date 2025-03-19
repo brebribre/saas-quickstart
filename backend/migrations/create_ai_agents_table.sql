@@ -10,6 +10,7 @@ CREATE TABLE public.ai_agents (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     is_active BOOLEAN NOT NULL DEFAULT true,
+    chat_history JSONB DEFAULT '[]'::jsonb,
     usage_count INTEGER NOT NULL DEFAULT 0,
     last_used_at TIMESTAMPTZ,
     configuration JSONB DEFAULT '{}'::jsonb

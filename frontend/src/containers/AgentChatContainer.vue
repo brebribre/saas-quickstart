@@ -2,7 +2,7 @@
 // Inbox view component
 import type { Agent } from '@/hooks/useAgents'
 import { useRoute } from 'vue-router'
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useAgents } from '@/hooks/useAgents'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -14,61 +14,69 @@ import type { AIModel } from '@/hooks/useLangchain'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useToast } from '@/components/ui/toast/use-toast'
 
+interface ChatMessage {
+  role: 'user' | 'assistant'
+  content: string
+  timestamp: string
+  steps?: Array<{
+    step: string
+    description: string
+    tool_used?: string
+    input?: Record<string, any>
+    output?: string | number
+  }>
+}
+
 const route = useRoute()
 const agentId = route.params.agentId as string
 const { toast } = useToast()
 
 const { getAgent, updateAgent } = useAgents()
-const { getModels } = useLangchain()
+const { getModels, askAgent } = useLangchain()
 
 const availableModels = ref<AIModel[]>([])
 const selectedModel = ref<string>('')
 
 const agent = ref<Agent | null>(null)
 const messageInput = ref('')
-const messages = ref([
-  {
-    id: 1,
-    content: "Hello! I'm your AI assistant. How can I help you today?",
-    sender: 'ai',
-    timestamp: new Date(Date.now() - 1000 * 60 * 5)
-  },
-  {
-    id: 2,
-    content: "I need help with my project",
-    sender: 'user',
-    timestamp: new Date(Date.now() - 1000 * 60 * 4)
-  },
-  {
-    id: 3,
-    content: "I'd be happy to help! Could you tell me more about your project? What kind of assistance do you need?",
-    sender: 'ai',
-    timestamp: new Date(Date.now() - 1000 * 60 * 3)
-  }
-])
 
-const sendMessage = () => {
-  if (!messageInput.value.trim()) return
+// Remove the hardcoded messages array and use computed property instead
+const messages = computed(() => {
+  if (!agent.value?.chat_history) return []
+  
+  return agent.value.chat_history.map((msg: ChatMessage, index: number) => ({
+    id: index,
+    content: msg.content,
+    sender: msg.role === 'user' ? 'user' : 'ai',
+    timestamp: new Date(msg.timestamp),
+    steps: msg.steps
+  }))
+})
 
-  // Add user message
-  messages.value.push({
-    id: messages.value.length + 1,
-    content: messageInput.value,
-    sender: 'user',
-    timestamp: new Date()
-  })
+const sendMessage = async () => {
+  if (!messageInput.value.trim() || !agent.value) return
 
-  // Mock AI response
-  setTimeout(() => {
-    messages.value.push({
-      id: messages.value.length + 1,
-      content: "I understand your request. Let me help you with that. Could you provide more details about what you're trying to achieve?",
-      sender: 'ai',
-      timestamp: new Date()
+  const question = messageInput.value
+  messageInput.value = '' // Clear input right away for better UX
+
+  try {
+    const response = await askAgent({
+      question,
+      agentId: agent.value.id,
+      modelId: agent.value.model_id
     })
-  }, 1000)
 
-  messageInput.value = ''
+    // The chat history will be updated in the backend
+    // Refresh the agent to get the updated chat history
+    agent.value = await getAgent(agentId)
+
+  } catch (err) {
+    toast({
+      title: 'Error',
+      description: err instanceof Error ? err.message : 'Failed to send message',
+      variant: 'destructive',
+    })
+  }
 }
 
 const handleModelChange = async (value: string | number | null | Record<string, any>) => {
@@ -181,6 +189,13 @@ onMounted(async () => {
               ]"
             >
               <p class="text-sm">{{ message.content }}</p>
+              <!-- Show reasoning steps for AI messages -->
+              <div v-if="message.steps && message.steps.length > 0" class="mt-2 text-xs space-y-1 opacity-80">
+                <div v-for="step in message.steps" :key="step.step" class="border-l-2 pl-2">
+                  <p><strong>{{ step.step }}:</strong> {{ step.description }}</p>
+                  <p v-if="step.tool_used" class="italic">Used: {{ step.tool_used }}</p>
+                </div>
+              </div>
               <p class="text-xs mt-1 opacity-70">
                 {{ message.timestamp.toLocaleTimeString() }}
               </p>
