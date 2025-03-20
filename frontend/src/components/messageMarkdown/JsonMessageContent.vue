@@ -93,11 +93,12 @@ onMounted(() => {
 .json-container {
   background-color: #1e1e1e;
   border-radius: 6px;
-  margin: 8px 0;
+  margin: 0.5rem 0;
   overflow: hidden;
   font-family: monospace;
   font-size: 12px; /* Smaller font size */
   width: 100%; /* Take available space */
+  max-width: 650px; /* Maximum width on all screen sizes */
 }
 
 .json-header {

@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/components/ui/toast/use-toast'
 import { useAuthStore } from '@/stores/auth'
 import JsonMessageContent from '@/components/messageMarkdown/JsonMessageContent.vue'
+import MarkdownContent from '@/components/messageMarkdown/MarkdownContent.vue'
 
 interface ChatMessage {
   role: 'user' | 'assistant'
@@ -54,6 +55,12 @@ type MessageItem = {
 
 // Type for either a message or date indicator
 type ChatItem = MessageItem | DateIndicator;
+
+// Define a type for content blocks
+interface ContentBlock {
+  type: 'markdown' | 'json' | string; // Extensible for future types
+  content: string;
+}
 
 const route = useRoute()
 const agentId = route.params.agentId as string
@@ -242,54 +249,53 @@ const handleModelChange = async (value: string | number | null | Record<string, 
   }
 }
 
-const formatText = (text: string) => {
-  if (!text) return '';
-  
-  // Format inline code (text within single backticks)
-  const formattedText = text.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>');
-  
-  // Replace line breaks with <br> tags
-  return formattedText.replace(/\n/g, '<br>');
-}
 
-// Function to check if content contains a JSON code block
-const hasJsonCodeBlock = (text: string): boolean => {
-  return text.includes('```json') && text.includes('```');
-}
 
-// Function to extract JSON from a code block
-const extractJsonFromCodeBlock = (text: string): string => {
-  const jsonRegex = /```json\n([\s\S]*?)\n```/;
-  const match = text.match(jsonRegex);
+// Function to parse message content into blocks
+const parseMessageToBlocks = (text: string): ContentBlock[] => {
+  if (!text) return [];
   
-  if (match && match[1]) {
-    return match[1].trim();
+  const blocks: ContentBlock[] = [];
+  const jsonBlockRegex = /```json\n([\s\S]*?)\n```/g;
+  
+  let lastIndex = 0;
+  let match;
+  
+  // Find all JSON blocks and extract them
+  while ((match = jsonBlockRegex.exec(text)) !== null) {
+    // Add text before the json block as markdown
+    if (match.index > lastIndex) {
+      const textBefore = text.substring(lastIndex, match.index).trim();
+      if (textBefore) {
+        blocks.push({ type: 'markdown', content: textBefore });
+      }
+    }
+    
+    // Add the json block
+    blocks.push({ type: 'json', content: match[1].trim() });
+    
+    lastIndex = match.index + match[0].length;
   }
   
-  return '';
-}
-
-// Function to get text outside JSON code blocks
-const getTextOutsideJsonBlocks = (text: string): string => {
-  if (!text) return '';
-  
-  // Replace all JSON code blocks with an empty string
-  return text.replace(/```json\n[\s\S]*?\n```/g, '').trim();
-}
-
-// Function to process message content, handling JSON blocks and regular text
-const processMessageContent = (text: string) => {
-  if (!text) return { isJson: false, content: '' };
-  
-  if (hasJsonCodeBlock(text)) {
-    const jsonContent = extractJsonFromCodeBlock(text);
-    if (jsonContent) {
-      return { isJson: true, content: jsonContent };
+  // Add remaining text after the last json block as markdown
+  if (lastIndex < text.length) {
+    const textAfter = text.substring(lastIndex).trim();
+    if (textAfter) {
+      blocks.push({ type: 'markdown', content: textAfter });
     }
   }
   
-  return { isJson: false, content: text };
+  // If no blocks were found (no json), add the entire text as markdown
+  if (blocks.length === 0 && text.trim()) {
+    blocks.push({ type: 'markdown', content: text.trim() });
+  }
+  
+  return blocks;
 }
+
+// We can keep the existing utility functions for backward compatibility
+
+
 
 onMounted(async () => {
   agent.value = await getAgent(agentId)
@@ -388,20 +394,28 @@ onMounted(async () => {
                   class="text-sm break-words"
                 >{{ item.content }}</div>
                 <template v-else>
-                  <!-- Handle the combined display of JSON and text -->
-                  <div>
-                    <!-- Show the JSON component if there's a JSON code block -->
-                    <JsonMessageContent 
-                      v-if="hasJsonCodeBlock(item.content)"
-                      :content="extractJsonFromCodeBlock(item.content)" 
-                    />
-                    
-                    <!-- Show the text outside of JSON blocks -->
-                    <div 
-                      v-if="getTextOutsideJsonBlocks(item.content)" 
-                      class="text-sm break-words" 
-                      v-html="formatText(getTextOutsideJsonBlocks(item.content))"
-                    ></div>
+                  <!-- Handle multiple content blocks -->
+                  <div class="message-blocks">
+                    <template v-for="(block, index) in parseMessageToBlocks(item.content)" :key="index">
+                      <!-- JSON Block -->
+                      <JsonMessageContent 
+                        v-if="block.type === 'json'"
+                        :content="block.content" 
+                        class="mb-2 last:mb-0"
+                      />
+                      
+                      <!-- Markdown Block -->
+                      <MarkdownContent
+                        v-else-if="block.type === 'markdown'"
+                        :content="block.content"
+                        class="mb-2 last:mb-0"
+                      />
+                      
+                      <!-- Future block types can be added here -->
+                      <div v-else class="text-sm break-words p-2 mb-2 last:mb-0">
+                        {{ block.content }}
+                      </div>
+                    </template>
                   </div>
                 </template>
                 
@@ -465,6 +479,11 @@ onMounted(async () => {
 
 .break-words {
   overflow-wrap: break-word;
+}
+
+/* Message blocks container */
+.message-blocks > :deep(*:not(:last-child)) {
+  margin-bottom: 0.75rem;
 }
 
 /* Style for inline code elements */
