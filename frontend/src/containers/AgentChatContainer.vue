@@ -154,7 +154,7 @@ const scrollToBottom = () => {
     if (messagesContainer) {
       const lastMessage = messagesContainer.lastElementChild
       if (lastMessage) {
-        lastMessage.scrollIntoView({ behavior: 'smooth' })
+        lastMessage.scrollIntoView({ behavior: 'smooth', block: 'end' })
       }
     }
   })
@@ -349,7 +349,7 @@ onMounted(async () => {
     </div>
 
     <!-- Chat Messages -->
-    <ScrollArea ref="logsContainer" class="flex-1 px-2 mb-2 sm:px-4">
+    <ScrollArea ref="logsContainer" class="flex-1 px-2 mb-4 sm:px-4">
       <div class="space-y-4">
         <template v-for="item in messagesWithDateIndicators" :key="item.id">
           <!-- Date separator -->
