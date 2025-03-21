@@ -127,6 +127,20 @@ export const useAgents = () => {
     }
   };
 
+  const clearAgentHistory = async (agentId: string): Promise<boolean> => {
+    try {
+      loading.value = true;
+      error.value = null;
+      await axios.post(`${AGENTS_ENDPOINT}/${agentId}/clear-history`);
+      return true;
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Failed to clear agent history';
+      return false;
+    } finally {
+      loading.value = false;
+    }
+  };
+
   return {
     createAgent,
     getAgent,
@@ -134,6 +148,7 @@ export const useAgents = () => {
     updateAgent,
     deleteAgent,
     incrementAgentUsage,
+    clearAgentHistory,
     loading,
     error,
   };

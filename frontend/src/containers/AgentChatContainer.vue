@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Avatar } from '@/components/ui/avatar'
-import { Bot, Send, User, ArrowLeft, Paperclip, X } from 'lucide-vue-next'
+import { Bot, Send, User, ArrowLeft, Paperclip, X, Trash2 } from 'lucide-vue-next'
 import { useLangchain } from '@/hooks/useLangchain'
 import type { AIModel } from '@/hooks/useLangchain'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -18,6 +18,15 @@ import JsonMessageContent from '@/components/messageMarkdown/JsonMessageContent.
 import MarkdownContent from '@/components/messageMarkdown/MarkdownContent.vue'
 import { useFiles } from '@/hooks/useFiles'
 import { Progress } from '@/components/ui/progress/index'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
 
 interface ChatMessage {
   role: 'user' | 'assistant'
@@ -68,7 +77,7 @@ const route = useRoute()
 const agentId = route.params.agentId as string
 const { toast } = useToast()
 
-const { getAgent, updateAgent } = useAgents()
+const { getAgent, updateAgent, clearAgentHistory } = useAgents()
 const { getModels, askAgent } = useLangchain()
 const authStore = useAuthStore()
 const { 
@@ -93,6 +102,9 @@ const fileInput = ref<HTMLInputElement | null>(null)
 const selectedFiles = ref<File[]>([])
 const uploadError = ref('')
 const isDraggingFile = ref(false)  // New ref for tracking drag state
+
+// Add a ref for the dialog state
+const isClearHistoryOpen = ref(false)
 
 // Add a helper function to format dates
 const formatDate = (date: Date) => {
@@ -544,6 +556,43 @@ const getFileListLabel = () => {
   return `Selected Files (${selectedFiles.value.length})`
 }
 
+// Add function to clear chat history
+const clearHistory = async () => {
+  try {
+    isLoading.value = true
+    const success = await clearAgentHistory(agentId)
+    
+    if (success) {
+      // Update local agent data
+      if (agent.value && agent.value.chat_history) {
+        agent.value.chat_history = []
+      }
+      
+      toast({
+        title: 'History cleared',
+        description: 'Chat history has been cleared successfully.',
+      })
+      
+      // Close the dialog
+      isClearHistoryOpen.value = false
+    } else {
+      toast({
+        title: 'Error',
+        description: 'Failed to clear chat history. Please try again.',
+        variant: 'destructive',
+      })
+    }
+  } catch (err) {
+    toast({
+      title: 'Error',
+      description: err instanceof Error ? err.message : 'An unexpected error occurred',
+      variant: 'destructive',
+    })
+  } finally {
+    isLoading.value = false
+  }
+}
+
 onMounted(async () => {
   agent.value = await getAgent(agentId)
   availableModels.value = await getModels()
@@ -568,36 +617,89 @@ onMounted(async () => {
     :class="{ 'file-drop-active': isDraggingFile }"
   >
     <!-- Header -->
-    <div class="border-b p-4">
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div class="flex items-center gap-3">
-          <Button variant="ghost" size="icon" @click="$router.push('/agents')" class="mr-2">
-            <ArrowLeft class="h-4 w-4" />
-          </Button>
-          <Avatar class="h-10 w-10 bg-primary/10">
-            <Bot class="h-6 w-6 text-primary" />
-          </Avatar>
-          <div>
-            <h1 class="text-xl font-semibold truncate">{{ agent?.name }}</h1>
-            <p class="text-sm text-muted-foreground line-clamp-1">{{ agent?.description }}</p>
+    <div class="border-b p-4 bg-card">
+      <!-- Navigation and Agent Info -->
+      <div class="flex items-center gap-3 mb-3">
+        <Button variant="ghost" size="icon" @click="$router.push('/agents')" class="shrink-0">
+          <ArrowLeft class="h-4 w-4" />
+        </Button>
+        <Avatar class="h-10 w-10 bg-primary/10 shrink-0">
+          <Bot class="h-6 w-6 text-primary" />
+        </Avatar>
+        <div class="min-w-0 flex-1">
+          <h1 class="text-xl font-semibold truncate">{{ agent?.name }}</h1>
+          <p class="text-sm text-muted-foreground line-clamp-1">{{ agent?.description }}</p>
+        </div>
+      </div>
+
+      <!-- Controls and Settings -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <!-- Tool Categories -->
+        <div v-if="agent?.tool_categories?.length" class="flex flex-wrap items-center gap-2">
+          <span class="text-sm font-medium text-foreground/90 whitespace-nowrap">Tools:</span>
+          <div class="flex flex-wrap gap-1">
+            <span 
+              v-for="tool in agent.tool_categories" 
+              :key="tool"
+              class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-background"
+            >
+              {{ tool }}
+            </span>
           </div>
         </div>
-        <div class="flex items-center gap-2">
-          <span class="text-sm text-muted-foreground whitespace-nowrap">Model:</span>
-          <Select v-model="selectedModel" @update:model-value="handleModelChange">
-            <SelectTrigger class="w-[180px] sm:w-[200px]">
-              <SelectValue placeholder="Select a model" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem 
-                v-for="model in availableModels" 
-                :key="model.id" 
-                :value="model.id"
-              >
-                {{ model.name }}
-              </SelectItem>
-            </SelectContent>
-          </Select>
+        <div v-else class="hidden sm:block"><!-- Empty space for grid alignment --></div>
+
+        <!-- Model and Clear History Controls -->
+        <div class="flex items-center gap-2 justify-start sm:justify-end">
+          <Dialog v-model:open="isClearHistoryOpen">
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm" class="flex items-center gap-1">
+                <Trash2 class="h-4 w-4" />
+                <span class="hidden xs:inline">Clear History</span>
+              </Button>
+            </DialogTrigger>
+            <DialogContent class="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Clear chat history?</DialogTitle>
+                <DialogDescription>
+                  This will permanently delete all messages. This action cannot be undone.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter class="mt-4 flex justify-end gap-2">
+                <Button 
+                  variant="outline" 
+                  @click="isClearHistoryOpen = false"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  variant="destructive" 
+                  @click="clearHistory"
+                  :disabled="isLoading"
+                >
+                  Clear
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+          
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-medium text-foreground/90 whitespace-nowrap">Model:</span>
+            <Select v-model="selectedModel" @update:model-value="handleModelChange">
+              <SelectTrigger class="w-[180px]">
+                <SelectValue placeholder="Select a model" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem 
+                  v-for="model in availableModels" 
+                  :key="model.id" 
+                  :value="model.id"
+                >
+                  {{ model.name }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
     </div>
@@ -875,5 +977,12 @@ onMounted(async () => {
 textarea {
   line-height: 1.5;
   overflow-y: auto !important;
+}
+
+/* Add this to your existing styles */
+.xs\:inline {
+  @media (min-width: 475px) {
+    display: inline;
+  }
 }
 </style>

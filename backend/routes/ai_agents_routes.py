@@ -217,4 +217,36 @@ def increment_usage(agent_id):
     except Exception as e:
         print(f"Error incrementing usage: {str(e)}")
         print(traceback.format_exc())
+        return jsonify({"error": str(e)}), 500
+
+@ai_agents_bp.route('/<agent_id>/clear-history', methods=['POST'])
+@swag_from({
+    "tags": ["AI Agents"],
+    "summary": "Clear chat history for an AI agent",
+    "parameters": [{
+        "name": "agent_id",
+        "in": "path",
+        "required": True,
+        "type": "string",
+        "format": "uuid"
+    }],
+    "responses": {
+        "200": {"description": "Chat history cleared successfully"},
+        "404": {"description": "Agent not found"},
+        "500": {"description": "Server error"}
+    }
+})
+def clear_chat_history(agent_id):
+    try:
+        result = supabase_controller.update(
+            "ai_agents",
+            data={"chat_history": []},
+            filters={"id": agent_id}
+        )
+        if not result:
+            return jsonify({"error": "Agent not found"}), 404
+        return jsonify({"message": "Chat history cleared successfully"}), 200
+    except Exception as e:
+        print(f"Error clearing chat history: {str(e)}")
+        print(traceback.format_exc())
         return jsonify({"error": str(e)}), 500 

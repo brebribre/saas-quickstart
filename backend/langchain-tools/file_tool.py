@@ -162,6 +162,49 @@ def get_file_content(
             else:
                 return f"⚠️ Failed to fetch file content: HTTP {response.status_code}"
 
+        # For Excel files (.xls, .xlsx) and OpenDocument spreadsheets
+        if mime_type and any(excel_type in mime_type for excel_type in [
+            "application/vnd.ms-excel", 
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "application/vnd.oasis.opendocument.spreadsheet"
+        ]):
+            import requests
+            import pandas as pd
+            import io
+            
+            response = requests.get(signed_url)
+            if response.status_code == 200:
+                try:
+                    # Read Excel file content
+                    excel_file = io.BytesIO(response.content)
+                    # Excel files can have multiple sheets, read all sheets into a dict of dataframes
+                    excel_data = pd.read_excel(excel_file, sheet_name=None)
+                    
+                    result = f"📊 Excel File: {file_name}\n\n"
+                    
+                    # Process each sheet
+                    for sheet_name, df in excel_data.items():
+                        # Get number of rows and columns
+                        rows, cols = df.shape
+                        
+                        # Add sheet summary
+                        result += f"Sheet: {sheet_name} ({rows} rows, {cols} columns)\n"
+                        
+                        # If the sheet is small enough, include all data as JSON
+                        if rows <= 50:  # Limit to avoid overwhelming responses
+                            sheet_data = df.to_json(orient="records")
+                            result += f"{sheet_data}\n\n"
+                        else:
+                            # Otherwise just show a sample of the first few rows
+                            sample_data = df.head(10).to_json(orient="records")
+                            result += f"Sample (first 10 rows):\n{sample_data}\n\n"
+                    
+                    return result
+                except Exception as e:
+                    return f"⚠️ Failed to parse Excel file: {str(e)}"
+            else:
+                return f"⚠️ Failed to fetch file content: HTTP {response.status_code}"
+
         # For PDFs specifically
         if mime_type and "application/pdf" in mime_type:
             import requests
@@ -193,8 +236,58 @@ def get_file_content(
             except Exception as e:
                 return f"⚠️ Error processing PDF: {str(e)}"
 
+        # For Word documents (.doc, .docx)
+        if mime_type and any(word_type in mime_type for word_type in [
+            "application/msword",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        ]):
+            import requests
+            import io
+            
+            response = requests.get(signed_url)
+            if response.status_code == 200:
+                try:
+                    # Use python-docx for .docx files
+                    if "openxmlformats" in mime_type:
+                        import docx
+                        
+                        doc_file = io.BytesIO(response.content)
+                        doc = docx.Document(doc_file)
+                        
+                        # Extract text from paragraphs
+                        text_content = "\n\n".join([paragraph.text for paragraph in doc.paragraphs if paragraph.text])
+                        
+                        return f"📝 Word Document: {file_name}\n\n{text_content}"
+                    # For .doc files (older format), use textract if available
+                    else:
+                        try:
+                            import textract
+                            # Save to a temporary file
+                            import tempfile
+                            import os
+                            
+                            temp_dir = tempfile.gettempdir()
+                            temp_path = os.path.join(temp_dir, file_name)
+                            
+                            with open(temp_path, 'wb') as f:
+                                f.write(response.content)
+                            
+                            # Extract text from the .doc file
+                            text_content = textract.process(temp_path).decode('utf-8')
+                            
+                            # Clean up
+                            os.remove(temp_path)
+                            
+                            return f"📝 Word Document: {file_name}\n\n{text_content}"
+                        except ImportError:
+                            return f"📝 Word Document: {file_name}\n\nCannot extract text from .doc files. The textract library is not installed."
+                except Exception as e:
+                    return f"⚠️ Failed to parse Word document: {str(e)}"
+            else:
+                return f"⚠️ Failed to fetch file content: HTTP {response.status_code}"
+
         # For other binary formats
-        return f"�� File available at: {file_name} (ID: {file_id})\nFile type: {mime_type}\nThis file cannot be directly read. Please use external tools to process this file type."
+        return f"📎 File available at: {file_name} (ID: {file_id})\nFile type: {mime_type}\nThis file cannot be directly read. Please use external tools to process this file type."
         
     except Exception as e:
         return f"❌ Error fetching file content: {str(e)}"

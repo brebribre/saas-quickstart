@@ -186,11 +186,11 @@ onMounted(() => {
   margin-top: 0;
 }
 
-:deep(h1) { font-size: 1.5rem; }
-:deep(h2) { font-size: 1.25rem; }
-:deep(h3) { font-size: 1.125rem; }
-:deep(h4) { font-size: 1rem; }
-:deep(h5, h6) { font-size: 0.875rem; }
+:deep(h1) { font-size: 1.5rem; margin-bottom: 0.5rem; margin-top: 1rem; }
+:deep(h2) { font-size: 1.25rem; margin-bottom: 0.5rem; margin-top: 1rem; }
+:deep(h3) { font-size: 1.125rem; margin-bottom: 0.5rem; margin-top: 1rem; }
+:deep(h4) { font-size: 1rem; margin-bottom: 0.5rem; margin-top: 1rem; }
+:deep(h5, h6) { font-size: 0.875rem; margin-bottom: 0.5rem; margin-top: 1rem; }
 
 :deep(blockquote) {
   border-left: 4px solid #e5e7eb; /* gray-200 */
