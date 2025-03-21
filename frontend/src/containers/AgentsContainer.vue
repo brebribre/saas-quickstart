@@ -206,15 +206,26 @@ onMounted(() => {
 
         <CardFooter class="pt-0">
           <div class="flex justify-between items-center w-full">
-            <Button 
-              variant="default" 
-              size="sm" 
-              class="h-8 text-xs gap-1.5" 
-              @click="$router.push(`/agents/chat/${agent.id}`)"
-            >
-              <MessageSquare class="h-3.5 w-3.5" />
-              Chat
-            </Button>
+            <div class="flex gap-2">
+              <Button 
+                variant="default" 
+                size="sm" 
+                class="h-8 text-xs gap-1.5" 
+                @click="$router.push(`/agents/chat/${agent.id}`)"
+              >
+                <MessageSquare class="h-3.5 w-3.5" />
+                Chat
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                class="h-8 text-xs gap-1.5" 
+                @click="$router.push(`/agents/configuration/${agent.id}`)"
+              >
+                <Pencil class="h-3.5 w-3.5" />
+                Config
+              </Button>
+            </div>
             <DropdownMenu>
               <DropdownMenuTrigger as-child>
                 <Button variant="ghost" size="sm" class="h-8 w-8 p-0">
@@ -225,6 +236,10 @@ onMounted(() => {
                 <DropdownMenuItem @click="$router.push(`/agents/${agent.id}`)">
                   <Pencil class="h-3.5 w-3.5 mr-2" />
                   Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem @click="$router.push(`/agents/configuration/${agent.id}`)">
+                  <Bot class="h-3.5 w-3.5 mr-2" />
+                  Configure
                 </DropdownMenuItem>
                 <DropdownMenuItem @click="handleDeleteAgent(agent.id)" class="text-destructive">
                   <Trash class="h-3.5 w-3.5 mr-2" />

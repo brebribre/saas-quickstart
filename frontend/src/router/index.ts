@@ -10,6 +10,8 @@ import DashboardView from '@/containers/DashboardView.vue'
 import AgentsContainer from '@/containers/AgentsContainer.vue'
 import CreateAgentContainer from '@/containers/CreateAgentContainer.vue'
 import AgentChatContainer from '@/containers/AgentChatContainer.vue'
+import AgentConfigurationContainer from '@/containers/AgentConfigurationContainer.vue'
+
 const router = createRouter({
   history: createWebHistory(),
   routes: [
@@ -59,6 +61,12 @@ const router = createRouter({
             path: '/agents/create',
             name: 'create-agent',
             component: CreateAgentContainer,
+            meta: { requiresAuth: true },
+          },
+          {
+            path: '/agents/configuration/:agentId',
+            name: 'agent-configuration',
+            component: AgentConfigurationContainer,
             meta: { requiresAuth: true },
           },
       ]

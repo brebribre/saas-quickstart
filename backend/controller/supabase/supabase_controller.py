@@ -263,3 +263,42 @@ class SupabaseController:
             raise Exception(f"Supabase storage download error: {response.error.message}")
         
         return response
+    
+    def get_signed_url(self, bucket: str, path: str, expires_in: int = 3600) -> Dict[str, Any]:
+        """
+        Generate a signed URL for temporary access to a file in Supabase Storage.
+        
+        Args:
+            bucket: Storage bucket name
+            path: Path to the file within the bucket
+            expires_in: Expiration time in seconds (default: 1 hour)
+            
+        Returns:
+            Dictionary containing the signed URL information
+        """
+        response = self.client.storage.from_(bucket).create_signed_url(path, expires_in)
+        
+        # Check for errors
+        if hasattr(response, 'error') and response.error:
+            raise Exception(f"Supabase signed URL generation error: {response.error.message}")
+        
+        return response
+    
+    def delete_file(self, bucket: str, path: str) -> Dict[str, Any]:
+        """
+        Delete a file from Supabase Storage.
+        
+        Args:
+            bucket: Storage bucket name
+            path: Path to the file within the bucket
+            
+        Returns:
+            Dictionary containing the deletion result
+        """
+        response = self.client.storage.from_(bucket).remove([path])
+        
+        # Check for errors
+        if hasattr(response, 'error') and response.error:
+            raise Exception(f"Supabase storage delete error: {response.error.message}")
+        
+        return response
