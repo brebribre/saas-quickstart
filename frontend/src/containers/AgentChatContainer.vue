@@ -5,6 +5,7 @@ import { ref, onMounted, computed, nextTick } from 'vue'
 import { useAgents } from '@/hooks/useAgents'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Avatar } from '@/components/ui/avatar'
 import { Bot, Send, User, ArrowLeft, Paperclip, X } from 'lucide-vue-next'
@@ -16,7 +17,7 @@ import { useAuthStore } from '@/stores/auth'
 import JsonMessageContent from '@/components/messageMarkdown/JsonMessageContent.vue'
 import MarkdownContent from '@/components/messageMarkdown/MarkdownContent.vue'
 import { useFiles } from '@/hooks/useFiles'
-import { Progress } from '@/components/ui/progress'
+import { Progress } from '@/components/ui/progress/index'
 
 interface ChatMessage {
   role: 'user' | 'assistant'
@@ -91,6 +92,7 @@ const logsContainer = ref()
 const fileInput = ref<HTMLInputElement | null>(null)
 const selectedFiles = ref<File[]>([])
 const uploadError = ref('')
+const isDraggingFile = ref(false)  // New ref for tracking drag state
 
 // Add a helper function to format dates
 const formatDate = (date: Date) => {
@@ -173,11 +175,9 @@ const scrollToBottom = () => {
   })
 }
 
+// Modified sendMessage function to handle file uploads
 const sendMessage = async () => {
-  if (!messageInput.value.trim() || !agent.value) return
-
-  const question = messageInput.value
-  messageInput.value = '' // Clear input right away for better UX
+  if ((!messageInput.value.trim() && !selectedFiles.value.length) || !agent.value) return
 
   try {
     const userId = authStore.user?.id
@@ -185,10 +185,53 @@ const sendMessage = async () => {
       throw new Error('User ID not found')
     }
 
+    // Handle file uploads first if there are any files selected
+    let fileDetails = ''
+    if (selectedFiles.value.length > 0) {
+      isLoading.value = true
+
+      // Upload the files
+      const results = await uploadFiles(
+        agentId,
+        selectedFiles.value, 
+        userId,
+        (progress) => {} // We're using the reactive uploadProgress from useFiles
+      )
+      
+      // Add file details to the message if files were uploaded successfully
+      if (results.length > 0) {
+        fileDetails = '\n'
+        results.forEach(file => {
+          fileDetails += `- ${file.filename} (${formatFileSize(file.file_size)})\n`
+        })
+        
+        // Clear selected files after successful upload
+        selectedFiles.value = []
+      }
+    }
+
+    // Prepare the message content
+    let finalMessage = messageInput.value.trim()
+    
+    // If we have files but no message, add a default message
+    if (!finalMessage && fileDetails) {
+      finalMessage = 'I\'ve shared the following files:' + fileDetails
+    } 
+    // If we have both a message and files, append the file details
+    else if (finalMessage && fileDetails) {
+      finalMessage += fileDetails
+    }
+    
+    // Only proceed if we have a message to send (from input or file upload)
+    if (!finalMessage) {
+      isLoading.value = false
+      return
+    }
+
     // Add user message immediately to chat history
     const userMessage: ChatMessage = {
       role: 'user',
-      content: question,
+      content: finalMessage,
       timestamp: new Date().toISOString()
     }
     
@@ -199,12 +242,15 @@ const sendMessage = async () => {
     agent.value.chat_history.push(userMessage)
     isLoading.value = true
     
+    // Clear input right after sending
+    messageInput.value = ''
+    
     // Scroll to bottom after adding user message
     scrollToBottom()
 
     // Get AI response
     await askAgent(
-      question,
+      finalMessage,
       userId,
       agent.value.id,
       agent.value.model_id
@@ -310,26 +356,169 @@ const handleFileSelect = (event: Event) => {
   if (!target.files?.length) return
   
   const files = Array.from(target.files)
+  const supportedFiles: File[] = []
+  const unsupportedFiles: string[] = []
+  const oversizedFiles: string[] = []
   
-  // Check file size and type
-  for (const file of files) {
+  // Validate files
+  files.forEach(file => {
     if (file.size > 50 * 1024 * 1024) { // 50MB
-      uploadError.value = `File ${file.name} exceeds the 50MB size limit`
-      return
+      oversizedFiles.push(file.name)
+    } else if (!isFileTypeAllowed(file)) {
+      unsupportedFiles.push(file.name)
+    } else {
+      supportedFiles.push(file)
     }
+  })
+  
+  // Handle errors for oversized files
+  if (oversizedFiles.length > 0) {
+    const fileNames = oversizedFiles.length > 3 
+      ? `${oversizedFiles.slice(0, 3).join(', ')} and ${oversizedFiles.length - 3} more` 
+      : oversizedFiles.join(', ')
     
-    if (!isFileTypeAllowed(file)) {
-      uploadError.value = `File type of ${file.name} is not allowed`
-      return
-    }
+    uploadError.value = `File${oversizedFiles.length > 1 ? 's' : ''} exceeding 50MB size limit: ${fileNames}`
+    
+    toast({
+      title: 'Files too large',
+      description: `${oversizedFiles.length} file${oversizedFiles.length > 1 ? 's' : ''} exceed the 50MB size limit`,
+      variant: 'destructive',
+    })
   }
   
-  uploadError.value = ''
-  selectedFiles.value = [...selectedFiles.value, ...files]
+  // Handle unsupported file types
+  if (unsupportedFiles.length > 0) {
+    const fileNames = unsupportedFiles.length > 3 
+      ? `${unsupportedFiles.slice(0, 3).join(', ')} and ${unsupportedFiles.length - 3} more` 
+      : unsupportedFiles.join(', ')
+    
+    if (!oversizedFiles.length) {
+      uploadError.value = `Unsupported file type${unsupportedFiles.length > 1 ? 's' : ''}: ${fileNames}`
+    }
+    
+    toast({
+      title: 'Unsupported file type',
+      description: `${unsupportedFiles.length} file${unsupportedFiles.length > 1 ? 's' : ''} of unsupported type were removed`,
+      variant: 'destructive',
+    })
+  }
+  
+  // Add supported files to selection
+  if (supportedFiles.length > 0) {
+    // Only clear error if we have valid files to add
+    if (supportedFiles.length === files.length) {
+      uploadError.value = ''
+    }
+    selectedFiles.value = [...selectedFiles.value, ...supportedFiles]
+    
+    // Show toast if some files were accepted
+    if (unsupportedFiles.length > 0 || oversizedFiles.length > 0) {
+      toast({
+        title: 'Files added',
+        description: `${supportedFiles.length} file${supportedFiles.length > 1 ? 's' : ''} were added successfully`,
+      })
+    }
+  }
   
   // Reset file input
   if (fileInput.value) {
     fileInput.value.value = ''
+  }
+}
+
+// Drag and drop handlers
+const handleDragEnter = (e: DragEvent) => {
+  e.preventDefault()
+  e.stopPropagation()
+  isDraggingFile.value = true
+}
+
+const handleDragOver = (e: DragEvent) => {
+  e.preventDefault()
+  e.stopPropagation()
+}
+
+const handleDragLeave = (e: DragEvent) => {
+  e.preventDefault()
+  e.stopPropagation()
+  
+  // Only set dragging to false if leaving the main container
+  if (e.currentTarget === e.target) {
+    isDraggingFile.value = false
+  }
+}
+
+const handleDrop = (e: DragEvent) => {
+  e.preventDefault()
+  e.stopPropagation()
+  isDraggingFile.value = false
+  
+  const droppedFiles = e.dataTransfer?.files
+  if (!droppedFiles?.length) return
+  
+  const files = Array.from(droppedFiles)
+  const supportedFiles: File[] = []
+  const unsupportedFiles: string[] = []
+  const oversizedFiles: string[] = []
+  
+  // Validate files
+  files.forEach(file => {
+    if (file.size > 50 * 1024 * 1024) { // 50MB
+      oversizedFiles.push(file.name)
+    } else if (!isFileTypeAllowed(file)) {
+      unsupportedFiles.push(file.name)
+    } else {
+      supportedFiles.push(file)
+    }
+  })
+  
+  // Handle errors for oversized files
+  if (oversizedFiles.length > 0) {
+    const fileNames = oversizedFiles.length > 3 
+      ? `${oversizedFiles.slice(0, 3).join(', ')} and ${oversizedFiles.length - 3} more` 
+      : oversizedFiles.join(', ')
+    
+    uploadError.value = `File${oversizedFiles.length > 1 ? 's' : ''} exceeding 50MB size limit: ${fileNames}`
+    
+    toast({
+      title: 'Files too large',
+      description: `${oversizedFiles.length} file${oversizedFiles.length > 1 ? 's' : ''} exceed the 50MB size limit`,
+      variant: 'destructive',
+    })
+  }
+  
+  // Handle unsupported file types
+  if (unsupportedFiles.length > 0) {
+    const fileNames = unsupportedFiles.length > 3 
+      ? `${unsupportedFiles.slice(0, 3).join(', ')} and ${unsupportedFiles.length - 3} more` 
+      : unsupportedFiles.join(', ')
+    
+    if (!oversizedFiles.length) {
+      uploadError.value = `Unsupported file type${unsupportedFiles.length > 1 ? 's' : ''}: ${fileNames}`
+    }
+    
+    toast({
+      title: 'Unsupported file type',
+      description: `${unsupportedFiles.length} file${unsupportedFiles.length > 1 ? 's' : ''} of unsupported type were removed`,
+      variant: 'destructive',
+    })
+  }
+  
+  // Add supported files to selection
+  if (supportedFiles.length > 0) {
+    // Only clear error if we have valid files to add
+    if (supportedFiles.length === files.length) {
+      uploadError.value = ''
+    }
+    selectedFiles.value = [...selectedFiles.value, ...supportedFiles]
+    
+    // Show toast if some files were accepted
+    if (unsupportedFiles.length > 0 || oversizedFiles.length > 0) {
+      toast({
+        title: 'Files added',
+        description: `${supportedFiles.length} file${supportedFiles.length > 1 ? 's' : ''} were added successfully`,
+      })
+    }
   }
 }
 
@@ -338,47 +527,10 @@ const removeFile = (index: number) => {
   selectedFiles.value = selectedFiles.value.filter((_, i) => i !== index)
 }
 
-// Handle file upload and send message
-const uploadAndSendMessage = async () => {
-  if (!selectedFiles.value.length || !agent.value) return
-  
-  try {
-    const userId = authStore.user?.id
-    if (!userId) {
-      throw new Error('User ID not found')
-    }
-    
-    // Upload the files
-    const results = await uploadFiles(
-      agentId,
-      selectedFiles.value, 
-      userId,
-      (progress) => {} // We're using the reactive uploadProgress from useFiles
-    )
-    
-    // If files were uploaded successfully, compose message text
-    if (results.length > 0) {
-      // Create a message with file info
-      let messageContent = 'I\'ve shared the following files:\n'
-      results.forEach(file => {
-        messageContent += `- ${file.filename} (${formatFileSize(file.file_size)})\n`
-      })
-      
-      // Set the message input and send
-      messageInput.value = messageContent
-      await sendMessage()
-      
-      // Clear selected files
-      selectedFiles.value = []
-    }
-    
-  } catch (error) {
-    toast({
-      title: 'Error',
-      description: error instanceof Error ? error.message : 'Failed to upload files',
-      variant: 'destructive',
-    })
-  }
+// File selection panel UI without the buttons
+const getFileListLabel = () => {
+  if (selectedFiles.value.length === 0) return ''
+  return `Selected Files (${selectedFiles.value.length})`
 }
 
 onMounted(async () => {
@@ -396,7 +548,14 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="flex flex-col h-[calc(100vh-4rem)]">
+  <div 
+    class="flex flex-col h-[calc(100vh-4rem)]"
+    @dragenter="handleDragEnter"
+    @dragover="handleDragOver" 
+    @dragleave="handleDragLeave"
+    @drop="handleDrop"
+    :class="{ 'file-drop-active': isDraggingFile }"
+  >
     <!-- Header -->
     <div class="border-b p-4">
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -547,20 +706,21 @@ onMounted(async () => {
     <div v-if="selectedFiles.length > 0" class="px-2 sm:px-4 pb-2">
       <div class="bg-muted p-3 rounded-md">
         <div class="flex justify-between items-center mb-2">
-          <h4 class="text-sm font-medium">Selected Files ({{ selectedFiles.length }})</h4>
-          <div class="flex gap-2">
-            <Button variant="outline" size="sm" @click="selectedFiles = []">
-              Cancel
-            </Button>
-            <Button size="sm" @click="uploadAndSendMessage" :disabled="isLoading || isFileUploading">
-              Upload & Send
-            </Button>
-          </div>
+          <h4 class="text-sm font-medium">{{ getFileListLabel() }}</h4>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            @click="selectedFiles = []"
+            :disabled="isLoading || isFileUploading"
+          >
+            <X class="h-3.5 w-3.5 mr-1" />
+            Clear files
+          </Button>
         </div>
         
         <div v-if="uploadError" class="text-sm text-destructive mb-2">{{ uploadError }}</div>
         
-        <div class="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-1">
+        <div class="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-1 mb-3">
           <div 
             v-for="(file, index) in selectedFiles" 
             :key="index"
@@ -581,6 +741,23 @@ onMounted(async () => {
             </Button>
           </div>
         </div>
+        
+        <!-- Add helper text -->
+        <p class="text-xs text-muted-foreground mt-2">
+          These files will be sent when you click <strong>Send</strong>. Type an optional message to accompany them.
+        </p>
+      </div>
+    </div>
+
+    <!-- File drop overlay - shown when dragging files -->
+    <div 
+      v-if="isDraggingFile" 
+      class="fixed inset-0 bg-primary/10 flex items-center justify-center z-50 pointer-events-none"
+    >
+      <div class="bg-card p-8 rounded-lg shadow-lg border-2 border-dashed border-primary text-center">
+        <Paperclip class="h-12 w-12 mx-auto mb-4 text-primary" />
+        <h3 class="text-xl font-medium">Drop files here</h3>
+        <p class="text-sm text-muted-foreground mt-2">Files will be uploaded and shared in the chat</p>
       </div>
     </div>
 
@@ -661,5 +838,20 @@ onMounted(async () => {
 .file-item-leave-to {
   opacity: 0;
   transform: translateY(10px);
+}
+
+/* Drag and drop styles */
+.file-drop-active {
+  position: relative;
+}
+
+.file-drop-active::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 2px dashed var(--primary);
+  pointer-events: none;
+  border-radius: 0.5rem;
+  z-index: 1;
 }
 </style>
