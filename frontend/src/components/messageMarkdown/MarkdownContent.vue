@@ -76,14 +76,12 @@ onMounted(() => {
   overflow-wrap: break-word;
   padding: 0.5rem 0; /* Vertical padding only */
   width: 100%; /* Take available space */
-  max-width: 650px; /* Maximum width on all screen sizes */
 }
 
 /* Adjust styling for small screens */
 @media (max-width: 480px) {
   .markdown-content {
     font-size: 0.8125rem; /* Slightly smaller font on mobile */
-    max-width: 260px; /* Fixed width only on mobile - match JsonMessageContent */
   }
 }
 

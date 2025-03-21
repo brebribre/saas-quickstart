@@ -98,7 +98,6 @@ onMounted(() => {
   font-family: monospace;
   font-size: 12px; /* Smaller font size */
   width: 100%; /* Take available space */
-  max-width: 650px; /* Maximum width on all screen sizes */
 }
 
 .json-header {
@@ -159,7 +158,6 @@ onMounted(() => {
 @media (max-width: 480px) {
   .json-container {
     font-size: 11px; /* Even smaller font on mobile */
-    max-width: 300px; /* Fixed width only on mobile */
   }
   
   .json-content {
