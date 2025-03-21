@@ -148,14 +148,17 @@ onMounted(() => {
       <Card
         v-for="agent in filteredAgents"
         :key="agent.id"
-        class="relative group border border-border hover:border-primary/20 transition-colors duration-200"
+        class="relative group border border-border hover:border-primary/20 transition-colors duration-200 bg-muted/30"
       >
         <CardHeader class="pb-2">
-          <div class="flex items-center gap-2">
-            <Avatar class="h-8 w-8 bg-primary/10">
-              <Bot class="h-5 w-5 text-primary" />
+          <div class="flex items-center gap-3 mb-2">
+            <Avatar class="h-10 w-10 bg-primary/10">
+              <Bot class="h-6 w-6 text-primary" />
             </Avatar>
-            <CardTitle class="text-base sm:text-lg leading-8 truncate">{{ agent.name }}</CardTitle>
+            <div>
+              <p class="text-sm text-muted-foreground">AI Assistant</p>
+              <CardTitle class="text-base sm:text-lg leading-tight">{{ agent.name }}</CardTitle>
+            </div>
           </div>
         </CardHeader>
 
@@ -174,17 +177,17 @@ onMounted(() => {
           </div>
         </CardContent>
 
-        <Separator class="mb-3" />
-
-        <CardFooter class="pt-0">
-          <div class="flex justify-between items-center w-full">
+        <CardFooter class="pt-2 flex justify-between items-center">
+          <p class="text-xs text-muted-foreground">
+            + {{ agent.tool_categories?.length || 0 }} tools
+          </p>
+          <div class="flex gap-2">
             <Button 
               variant="default" 
               size="sm" 
-              class="h-8 text-xs gap-1.5" 
+              class="h-8 text-xs" 
               @click="$router.push(`/agents/chat/${agent.id}`)"
             >
-              <MessageSquare class="h-3.5 w-3.5" />
               Chat
             </Button>
             <DropdownMenu>

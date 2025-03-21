@@ -160,7 +160,7 @@ onMounted(() => {
 }
 
 :deep(li:last-child) {
-  margin-bottom: 0;
+  margin-bottom: 0.75rem;
 }
 
 :deep(li > ul, li > ol) {
