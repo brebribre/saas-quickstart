@@ -1,10 +1,11 @@
-from flask import Blueprint, request, jsonify, current_app
+from flask import Blueprint, request, jsonify, current_app, url_for, send_file, Response, stream_with_context
 from controller.supabase.supabase_controller import SupabaseController
 import traceback
 from flasgger import swag_from
 from uuid import UUID, uuid4
 import os
 from werkzeug.utils import secure_filename
+import mimetypes
 
 # Create a Blueprint for file routes
 file_bp = Blueprint('file', __name__)
@@ -264,19 +265,69 @@ def get_file_url(file_id):
         
         file_data = file_result[0]
         file_path = file_data.get("file_path")
+        filename = file_data.get("filename")
         
-        # Get signed URL (valid for 1 hour)
+        # Create a proxy URL for the frontend to use
+        # This URL points to our proxy endpoint that will fetch and stream the file content
+        proxy_url = url_for('file.proxy_file', file_id=file_id, user_id=user_id, _external=True)
+        
+        return jsonify({
+            "signedUrl": proxy_url,
+            "filename": filename
+        }), 200
+        
+    except Exception as e:
+        print(f"Error getting file URL: {str(e)}")
+        print(traceback.format_exc())
+        return jsonify({"error": str(e)}), 500
+
+# Add a proxy endpoint to stream the file from Supabase to the client
+@file_bp.route('/proxy/<file_id>', methods=['GET'])
+def proxy_file(file_id):
+    try:
+        user_id = request.args.get('user_id')
+        if not user_id:
+            return jsonify({"error": "User ID is required"}), 400
+            
+        # Get file details and verify ownership
+        file_result = supabase_controller.select(
+            "files",
+            filters={"id": file_id, "user_id": user_id}
+        )
+        
+        if not file_result:
+            return jsonify({"error": "File not found or not authorized"}), 404
+        
+        file_data = file_result[0]
+        file_path = file_data.get("file_path")
+        filename = file_data.get("filename")
+        mime_type = file_data.get("mime_type")
+        
+        # Get signed URL from Supabase
         url_result = supabase_controller.get_signed_url("files", file_path, 3600)
         
         if not url_result or "error" in url_result:
             return jsonify({"error": "Failed to generate signed URL"}), 500
         
-        return jsonify({
-            "signedUrl": url_result.get("signedURL"),
-            "filename": file_data.get("filename")
-        }), 200
+        supabase_signed_url = url_result.get("signedURL")
+        
+        # Stream the file content from Supabase to the client
+        import requests
+        from flask import Response, stream_with_context
+        
+        # Make a streaming request to Supabase
+        supabase_response = requests.get(supabase_signed_url, stream=True)
+        
+        # Return a streaming response to the client
+        return Response(
+            stream_with_context(supabase_response.iter_content(chunk_size=1024)),
+            content_type=mime_type or 'application/octet-stream',
+            headers={
+                'Content-Disposition': f'inline; filename="{filename}"'
+            }
+        )
         
     except Exception as e:
-        print(f"Error getting file URL: {str(e)}")
+        print(f"Error proxying file: {str(e)}")
         print(traceback.format_exc())
         return jsonify({"error": str(e)}), 500
