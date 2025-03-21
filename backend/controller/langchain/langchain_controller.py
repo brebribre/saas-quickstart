@@ -29,6 +29,7 @@ from web_search_tool import web_search
 from time_tool import get_current_date, get_current_time
 from wikipedia_tool import wikipedia_search
 from google_drive_tool import list_allowed_files, get_drive_file_content
+from file_tool import list_uploaded_files, get_file_content, search_files
 load_dotenv()
 
 class LangChainController:
@@ -65,6 +66,11 @@ class LangChainController:
                 "name": "Google Drive",
                 "description": "Google Drive file operations",
                 "tools": [list_allowed_files, get_drive_file_content]
+            },
+            "files": {
+                "name": "File Access",
+                "description": "Access to files uploaded to the agent",
+                "tools": [list_uploaded_files, get_file_content, search_files]
             }
             # Add more tool categories here 
         }
