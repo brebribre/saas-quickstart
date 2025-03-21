@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// Inbox view component
 import type { Agent } from '@/hooks/useAgents'
 import { useRoute } from 'vue-router'
 import { ref, onMounted, computed, nextTick } from 'vue'

@@ -289,6 +289,7 @@ class LangChainController:
                     "You have access to specialized tools to help you answer the question. \n\n"
                     "You don't need to specify that you used a tool, just answer the question."
                     "Never assume the current date or time, use the tools to get the current date and time."
+                    "Whenever you have to find a file, use the list_uploaded_files and list_allowed_files tools to decide which file to use."
                     "Always write your answer in markdown format and use bullet points and numbered lists when appropriate."
                 )
             )
