@@ -649,8 +649,18 @@ onMounted(async () => {
         </div>
         <div v-else class="hidden sm:block"><!-- Empty space for grid alignment --></div>
 
-        <!-- Model and Clear History Controls -->
+        <!-- Model, Clear History and Configuration Controls -->
         <div class="flex items-center gap-2 justify-start sm:justify-end">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            class="flex items-center gap-1"
+            @click="$router.push(`/agents/configuration/${agentId}`)"
+          >
+            <ArrowLeft class="h-4 w-4 rotate-180" />
+            <span class="hidden xs:inline">Configure</span>
+          </Button>
+          
           <Dialog v-model:open="isClearHistoryOpen">
             <DialogTrigger asChild>
               <Button variant="outline" size="sm" class="flex items-center gap-1">

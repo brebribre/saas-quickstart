@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Avatar } from '@/components/ui/avatar';
-import { MoreVertical, Pencil, Trash, MessageSquare, Bot, Search } from 'lucide-vue-next';
+import { MoreVertical, Pencil, Trash, MessageSquare, Bot, Search, FileText } from 'lucide-vue-next';
 import { useToast } from '@/components/ui/toast/use-toast';
 import { Separator } from '@/components/ui/separator'
 import {
@@ -148,57 +148,29 @@ onMounted(() => {
       <Card
         v-for="agent in filteredAgents"
         :key="agent.id"
-        class="relative group"
+        class="relative group border border-border hover:border-primary/20 transition-colors duration-200"
       >
         <CardHeader class="pb-2">
-          <div class="flex justify-between items-center gap-2">
-            <div class="flex items-center gap-2">
-              <Avatar class="h-8 w-8 bg-primary/10">
-                <Bot class="h-5 w-5 text-primary" />
-              </Avatar>
-              <CardTitle class="text-base sm:text-lg leading-8 truncate">{{ agent.name }}</CardTitle>
-            </div>
-            <Badge :variant="agent.is_active ? 'default' : 'secondary'" class="shrink-0 text-xs">
-              {{ agent.is_active ? 'Active' : 'Inactive' }}
-            </Badge>
+          <div class="flex items-center gap-2">
+            <Avatar class="h-8 w-8 bg-primary/10">
+              <Bot class="h-5 w-5 text-primary" />
+            </Avatar>
+            <CardTitle class="text-base sm:text-lg leading-8 truncate">{{ agent.name }}</CardTitle>
           </div>
         </CardHeader>
 
         <CardContent class="pb-3">
-          <div class="space-y-2">
-            <div v-if="agent.description" class="flex gap-1.5 text-xs">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <p class="line-clamp-2 sm:line-clamp-1 cursor-help text-xs sm:text-sm">{{ agent.description }}</p>
-                  </TooltipTrigger>
-                  <TooltipContent class="max-w-[250px] sm:max-w-xs whitespace-normal">
-                    <p>{{ agent.description }}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-
-            <div class="flex items-center gap-1.5 text-xs sm:text-sm flex-wrap">
-              <span class="font-medium shrink-0">Model:</span>
-              <Badge variant="outline" class="bg-primary/5 text-xs h-5">
-                {{ agent.model_id }}
-              </Badge>
-            </div>
-
-            <div v-if="agent.tool_categories?.length" class="flex items-center gap-1.5 flex-wrap">
-              <span class="text-xs sm:text-sm font-medium shrink-0">Tools:</span>
-              <div class="flex flex-wrap gap-1">
-                <Badge 
-                  v-for="tool in agent.tool_categories" 
-                  :key="tool"
-                  variant="secondary"
-                  class="bg-secondary/10 text-xs h-5"
-                >
-                  {{ tool }}
-                </Badge>
-              </div>
-            </div>
+          <div v-if="agent.description" class="flex gap-1.5 text-xs mb-2">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <p class="line-clamp-2 cursor-help text-xs sm:text-sm text-muted-foreground">{{ agent.description }}</p>
+                </TooltipTrigger>
+                <TooltipContent class="max-w-[250px] sm:max-w-xs whitespace-normal">
+                  <p>{{ agent.description }}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </CardContent>
 
@@ -206,29 +178,18 @@ onMounted(() => {
 
         <CardFooter class="pt-0">
           <div class="flex justify-between items-center w-full">
-            <div class="flex gap-2">
-              <Button 
-                variant="default" 
-                size="sm" 
-                class="h-8 text-xs gap-1.5" 
-                @click="$router.push(`/agents/chat/${agent.id}`)"
-              >
-                <MessageSquare class="h-3.5 w-3.5" />
-                Chat
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                class="h-8 text-xs gap-1.5" 
-                @click="$router.push(`/agents/configuration/${agent.id}`)"
-              >
-                <Pencil class="h-3.5 w-3.5" />
-                Config
-              </Button>
-            </div>
+            <Button 
+              variant="default" 
+              size="sm" 
+              class="h-8 text-xs gap-1.5" 
+              @click="$router.push(`/agents/chat/${agent.id}`)"
+            >
+              <MessageSquare class="h-3.5 w-3.5" />
+              Chat
+            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger as-child>
-                <Button variant="ghost" size="sm" class="h-8 w-8 p-0">
+                <Button variant="ghost" size="sm" class="h-8 w-8 p-0 rounded-full">
                   <MoreVertical class="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
@@ -238,8 +199,8 @@ onMounted(() => {
                   Edit
                 </DropdownMenuItem>
                 <DropdownMenuItem @click="$router.push(`/agents/configuration/${agent.id}`)">
-                  <Bot class="h-3.5 w-3.5 mr-2" />
-                  Configure
+                  <FileText class="h-3.5 w-3.5 mr-2" />
+                  Files
                 </DropdownMenuItem>
                 <DropdownMenuItem @click="handleDeleteAgent(agent.id)" class="text-destructive">
                   <Trash class="h-3.5 w-3.5 mr-2" />
@@ -253,21 +214,36 @@ onMounted(() => {
     </div>
 
     <!-- Empty Search Results -->
-    <Card v-else-if="agents.length > 0" class="text-center p-6">
+    <Card v-else-if="agents.length > 0" class="border border-border text-center p-6 max-w-md mx-auto">
       <CardHeader>
+        <div class="flex justify-center mb-2">
+          <Avatar class="h-12 w-12 bg-muted">
+            <Search class="h-6 w-6 text-muted-foreground" />
+          </Avatar>
+        </div>
         <CardTitle>No Matching Agents</CardTitle>
         <CardDescription>No agents found matching your search criteria</CardDescription>
       </CardHeader>
+      <CardFooter class="flex justify-center pt-2">
+        <Button variant="outline" @click="searchQuery = ''">
+          Clear Search
+        </Button>
+      </CardFooter>
     </Card>
 
     <!-- Empty State -->
-    <Card v-else class="text-center p-6">
+    <Card v-else class="border border-border text-center p-6 max-w-md mx-auto">
       <CardHeader>
+        <div class="flex justify-center mb-2">
+          <Avatar class="h-12 w-12 bg-primary/10">
+            <Bot class="h-6 w-6 text-primary" />
+          </Avatar>
+        </div>
         <CardTitle>No AI Agents Yet</CardTitle>
         <CardDescription>Get started by creating your first AI agent</CardDescription>
       </CardHeader>
-      <CardFooter class="flex justify-center">
-        <Button>
+      <CardFooter class="flex justify-center pt-2">
+        <Button @click="$router.push('/agents/create')">
           Create Your First Agent
         </Button>
       </CardFooter>

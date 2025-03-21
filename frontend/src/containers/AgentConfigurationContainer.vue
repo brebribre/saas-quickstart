@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useFiles, type FileRecord } from '@/hooks/useFiles'
 import { useAuthStore } from '@/stores/auth'
 import { useAgents, type Agent } from '@/hooks/useAgents'
@@ -15,7 +15,12 @@ import {
   TableRow 
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
-import { Separator } from '@/components/ui/separator'
+import { 
+  Tabs, 
+  TabsContent, 
+  TabsList, 
+  TabsTrigger 
+} from '@/components/ui/tabs'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { 
   ArrowLeft, 
@@ -26,10 +31,12 @@ import {
   FileSpreadsheet,
   Image as FileImage,
   FileType2 as FilePdf,
-  FileJson
+  FileJson,
+  Wrench
 } from 'lucide-vue-next'
 
 const route = useRoute()
+const router = useRouter()
 const agentId = route.params.agentId as string
 const { toast } = useToast()
 const authStore = useAuthStore()
@@ -45,6 +52,19 @@ const {
 const agent = ref<Agent | null>(null)
 const files = ref<FileRecord[]>([])
 const isLoading = ref(false)
+const activeTab = ref('files')
+
+// Watch for route changes to update active tab
+watch(() => route.query.tab, (newTab) => {
+  if (newTab === 'tools' || newTab === 'files') {
+    activeTab.value = newTab
+  }
+}, { immediate: true })
+
+// Handle tab changes and routing
+watch(activeTab, (newValue) => {
+  router.push({ query: { ...route.query, tab: newValue } })
+})
 
 // Get appropriate icon for file type
 const getFileIcon = (mimeType: string) => {
@@ -148,7 +168,16 @@ const handleDeleteFile = async (fileId: string) => {
 onMounted(async () => {
   if (authStore.user) {
     agent.value = await getAgent(agentId)
-    await loadFiles()
+    
+    // Set default tab to 'files' if not specified
+    if (!route.query.tab) {
+      router.replace({ query: { ...route.query, tab: 'files' } })
+    }
+    
+    // Load files if on files tab
+    if (activeTab.value === 'files') {
+      await loadFiles()
+    }
   }
 })
 </script>
@@ -159,75 +188,111 @@ onMounted(async () => {
       <Button variant="ghost" size="icon" @click="$router.push('/agents')" class="shrink-0">
         <ArrowLeft class="h-4 w-4" />
       </Button>
-      <h1 class="text-2xl font-bold">Agent Configuration</h1>
+      <h1 class="text-2xl font-bold">{{ agent?.name }} Configuration</h1>
     </div>
     
-    <Card class="mb-8">
-      <CardHeader>
-        <CardTitle>{{ agent?.name }} Documents</CardTitle>
-        <CardDescription>
-          Manage all the documents uploaded to this agent
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div v-if="isLoading" class="py-4 text-center text-muted-foreground">
-          Loading files...
-        </div>
-        
-        <div v-else-if="files.length === 0" class="py-8 text-center text-muted-foreground">
-          <FileIcon class="mx-auto h-12 w-12 mb-3 opacity-50" />
-          <p>No documents have been uploaded to this agent yet.</p>
-          <p class="text-sm mt-2">
-            You can upload documents during chat by dragging files or using the file button.
-          </p>
-        </div>
-        
-        <Table v-else>
-          <TableCaption>A list of documents uploaded to this agent.</TableCaption>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Size</TableHead>
-              <TableHead>Uploaded At</TableHead>
-              <TableHead class="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            <TableRow v-for="file in files" :key="file.id">
-              <TableCell class="font-medium flex items-center gap-2">
-                <component :is="getFileIcon(file.mime_type)" class="h-4 w-4 opacity-70" /> 
-                <span class="truncate max-w-[150px]">{{ file.filename }}</span>
-              </TableCell>
-              <TableCell>{{ file.mime_type.split('/')[1].toUpperCase() }}</TableCell>
-              <TableCell>{{ formatFileSize(file.file_size) }}</TableCell>
-              <TableCell>{{ formatDate(file.uploaded_at) }}</TableCell>
-              <TableCell class="text-right">
-                <div class="flex justify-end gap-2">
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    @click="openFile(file.id)"
-                    title="View file"
-                  >
-                    <ExternalLink class="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    @click="handleDeleteFile(file.id)"
-                    title="Delete file"
-                    class="text-destructive"
-                  >
-                    <Trash2 class="h-4 w-4" />
-                  </Button>
-                </div>
-              </TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
+    <!-- Tabs -->
+    <Tabs v-model="activeTab" class="space-y-4">
+      <TabsList class="grid w-full grid-cols-2 max-w-md">
+        <TabsTrigger value="files">
+          Files
+        </TabsTrigger>
+        <TabsTrigger value="tools">
+          Tools
+        </TabsTrigger>
+      </TabsList>
+      
+      <!-- Files Tab Content -->
+      <TabsContent value="files" class="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Agent Documents</CardTitle>
+            <CardDescription>
+              Manage all the documents uploaded to this agent
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div v-if="isLoading" class="py-4 text-center text-muted-foreground">
+              Loading files...
+            </div>
+            
+            <div v-else-if="files.length === 0" class="py-8 text-center text-muted-foreground">
+              <FileIcon class="mx-auto h-12 w-12 mb-3 opacity-50" />
+              <p>No documents have been uploaded to this agent yet.</p>
+              <p class="text-sm mt-2">
+                You can upload documents during chat by dragging files or using the file button.
+              </p>
+            </div>
+            
+            <Table v-else>
+              <TableCaption>A list of documents uploaded to this agent.</TableCaption>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Size</TableHead>
+                  <TableHead>Uploaded At</TableHead>
+                  <TableHead class="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow v-for="file in files" :key="file.id">
+                  <TableCell class="font-medium flex items-center gap-2">
+                    <component :is="getFileIcon(file.mime_type)" class="h-4 w-4 opacity-70" /> 
+                    <span class="truncate max-w-[150px]">{{ file.filename }}</span>
+                  </TableCell>
+                  <TableCell>{{ file.mime_type.split('/')[1].toUpperCase() }}</TableCell>
+                  <TableCell>{{ formatFileSize(file.file_size) }}</TableCell>
+                  <TableCell>{{ formatDate(file.uploaded_at) }}</TableCell>
+                  <TableCell class="text-right">
+                    <div class="flex justify-end gap-2">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        @click="openFile(file.id)"
+                        title="View file"
+                      >
+                        <ExternalLink class="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        @click="handleDeleteFile(file.id)"
+                        title="Delete file"
+                        class="text-destructive"
+                      >
+                        <Trash2 class="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </TabsContent>
+      
+      <!-- Tools Tab Content -->
+      <TabsContent value="tools" class="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Agent Tools</CardTitle>
+            <CardDescription>
+              Configure the tools available to this agent
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div class="py-8 text-center text-muted-foreground">
+              <Wrench class="mx-auto h-12 w-12 mb-3 opacity-50" />
+              <p>Tool configuration coming soon.</p>
+              <p class="text-sm mt-2">
+                In the future, you'll be able to enable and configure specific tools for this agent.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </TabsContent>
+    </Tabs>
   </div>
 </template>
 
