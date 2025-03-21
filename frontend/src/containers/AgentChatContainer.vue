@@ -175,6 +175,17 @@ const scrollToBottom = () => {
   })
 }
 
+// Add function to auto-resize the textarea based on content
+const autoResizeTextarea = (e: Event) => {
+  const textarea = e.target as HTMLTextAreaElement
+  
+  // Reset height to auto first to get the correct scrollHeight
+  textarea.style.height = 'auto'
+  
+  // Set the height to match content (with a max height applied in CSS)
+  textarea.style.height = `${Math.min(textarea.scrollHeight, 200)}px`
+}
+
 // Modified sendMessage function to handle file uploads
 const sendMessage = async () => {
   if ((!messageInput.value.trim() && !selectedFiles.value.length) || !agent.value) return
@@ -771,7 +782,7 @@ onMounted(async () => {
           size="icon" 
           @click="fileInput?.click()"
           :disabled="isLoading || isFileUploading" 
-          class="shrink-0"
+          class="shrink-0 self-end"
         >
           <Paperclip class="h-4 w-4" />
         </Button>
@@ -785,12 +796,17 @@ onMounted(async () => {
           accept=".xlsx,.xls,.csv,.jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.txt,.json"
         />
 
-        <Input
+        <!-- Replace Input with Textarea -->
+        <Textarea
           v-model="messageInput"
           placeholder="Type your message..."
-          class="flex-1"
+          class="flex-1 resize-none min-h-[40px] max-h-[200px]"
+          :rows="1"
+          @keydown.enter.exact.prevent="sendMessage"
+          @input="autoResizeTextarea"
         />
-        <Button type="submit" size="icon" :disabled="isLoading || isFileUploading">
+        
+        <Button type="submit" size="icon" :disabled="isLoading || isFileUploading" class="self-end">
           <Send class="h-4 w-4" />
         </Button>
       </form>
@@ -853,5 +869,11 @@ onMounted(async () => {
   pointer-events: none;
   border-radius: 0.5rem;
   z-index: 1;
+}
+
+/* Style for textarea to look like the input */
+textarea {
+  line-height: 1.5;
+  overflow-y: auto !important;
 }
 </style>
