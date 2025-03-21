@@ -159,7 +159,7 @@ watch(selectedTool, (newValue) => {
   <div class="p-2">
     <div class="flex items-center gap-2 mb-6">
       <Button 
-        variant="outline" 
+        variant="ghost" 
         size="icon"
         @click="router.push('/agents')"
       >

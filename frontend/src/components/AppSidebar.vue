@@ -19,7 +19,7 @@ import {
   SidebarFooter
 } from '@/components/ui/sidebar'
 import { useRouter } from 'vue-router'
-import { onMounted, computed } from 'vue'
+import { computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'

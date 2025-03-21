@@ -17,6 +17,28 @@ const md = new MarkdownIt({
   typographer: true, // Enable smartquotes and other typographic replacements
 });
 
+// Add a custom renderer for table cells to force padding
+const defaultRender = md.renderer.rules.td_open || function(tokens, idx, options, env, self) {
+  return self.renderToken(tokens, idx, options);
+};
+
+md.renderer.rules.td_open = function(tokens, idx, options, env, self) {
+  // Add inline style to ensure padding
+  tokens[idx].attrJoin('style', 'padding: 0.75rem; border: 1px solid #e5e7eb;');
+  return defaultRender(tokens, idx, options, env, self);
+};
+
+// Do the same for table headers
+const thDefaultRender = md.renderer.rules.th_open || function(tokens, idx, options, env, self) {
+  return self.renderToken(tokens, idx, options);
+};
+
+md.renderer.rules.th_open = function(tokens, idx, options, env, self) {
+  // Add inline style to ensure padding and background
+  tokens[idx].attrJoin('style', 'padding: 0.75rem; border: 1px solid #e5e7eb; background-color: #f9fafb; font-weight: 600;');
+  return thDefaultRender(tokens, idx, options, env, self);
+};
+
 onMounted(() => {
   // Render markdown to HTML
   renderedContent.value = md.render(props.content);
@@ -28,6 +50,26 @@ onMounted(() => {
 </template>
 
 <style scoped>
+/* Using non-scoped CSS as a fallback to ensure styles are applied */
+.markdown-content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1rem 0;
+  border: 1px solid #d1d5db;
+}
+
+.markdown-content table th,
+.markdown-content table td {
+  border: 1px solid #e5e7eb;
+  padding: 0.75rem;
+  text-align: left;
+}
+
+.markdown-content table th {
+  background-color: #f9fafb;
+  font-weight: 600;
+}
+
 .markdown-content {
   font-size: 0.875rem; /* text-sm equivalent */
   line-height: 1.5;
@@ -166,27 +208,32 @@ onMounted(() => {
   border-top: 1px solid #e5e7eb; /* gray-200 */
 }
 
+/* Table styles with !important */
 :deep(table) {
-  border-collapse: collapse;
-  width: 100%;
-  margin: 1rem 0;
+  border-collapse: collapse !important;
+  width: 100% !important;
+  margin: 1rem 0 !important;
+  border: 1px solid #d1d5db !important;
 }
 
-:deep(table:first-child) {
-  margin-top: 0;
-}
-
-:deep(table:last-child) {
-  margin-bottom: 0;
-}
-
-:deep(table th, table td) {
-  border: 1px solid #e5e7eb; /* gray-200 */
-  padding: 0.5rem;
+:deep(table th),
+:deep(table td) {
+  border: 1px solid #e5e7eb !important;
+  padding: 0.25rem !important;
+  text-align: left !important;
 }
 
 :deep(table th) {
-  background-color: #f9fafb; /* gray-50 */
-  font-weight: 600;
+  background-color: #f9fafb !important;
+  font-weight: 600 !important;
+}
+
+/* Additional table row styling */
+:deep(table tr) {
+  border-bottom: 1px solid #e5e7eb !important;
+}
+
+:deep(table tr:nth-child(even)) {
+  background-color: #f9fafb !important;
 }
 </style> 

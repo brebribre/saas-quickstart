@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Avatar } from '@/components/ui/avatar'
-import { Bot, Send, User, ArrowLeft } from 'lucide-vue-next'
+import { Bot, Send, User, ArrowLeft, Paperclip, X } from 'lucide-vue-next'
 import { useLangchain } from '@/hooks/useLangchain'
 import type { AIModel } from '@/hooks/useLangchain'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -16,6 +16,8 @@ import { useToast } from '@/components/ui/toast/use-toast'
 import { useAuthStore } from '@/stores/auth'
 import JsonMessageContent from '@/components/messageMarkdown/JsonMessageContent.vue'
 import MarkdownContent from '@/components/messageMarkdown/MarkdownContent.vue'
+import { useFiles } from '@/hooks/useFiles'
+import { Progress } from '@/components/ui/progress'
 
 interface ChatMessage {
   role: 'user' | 'assistant'
@@ -69,6 +71,13 @@ const { toast } = useToast()
 const { getAgent, updateAgent } = useAgents()
 const { getModels, askAgent } = useLangchain()
 const authStore = useAuthStore()
+const { 
+  uploadFiles,
+  formatFileSize,
+  isFileTypeAllowed,
+  uploadProgress,
+  loading: isFileUploading
+} = useFiles()
 
 const availableModels = ref<AIModel[]>([])
 const selectedModel = ref<string>('')
@@ -78,6 +87,11 @@ const messageInput = ref('')
 const isLoading = ref(false)
 
 const logsContainer = ref()
+
+// Add file handling refs
+const fileInput = ref<HTMLInputElement | null>(null)
+const selectedFiles = ref<File[]>([])
+const uploadError = ref('')
 
 // Add a helper function to format dates
 const formatDate = (date: Date) => {
@@ -249,8 +263,6 @@ const handleModelChange = async (value: string | number | null | Record<string, 
   }
 }
 
-
-
 // Function to parse message content into blocks
 const parseMessageToBlocks = (text: string): ContentBlock[] => {
   if (!text) return [];
@@ -293,9 +305,82 @@ const parseMessageToBlocks = (text: string): ContentBlock[] => {
   return blocks;
 }
 
-// We can keep the existing utility functions for backward compatibility
+// Handle file selection
+const handleFileSelect = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  if (!target.files?.length) return
+  
+  const files = Array.from(target.files)
+  
+  // Check file size and type
+  for (const file of files) {
+    if (file.size > 50 * 1024 * 1024) { // 50MB
+      uploadError.value = `File ${file.name} exceeds the 50MB size limit`
+      return
+    }
+    
+    if (!isFileTypeAllowed(file)) {
+      uploadError.value = `File type of ${file.name} is not allowed`
+      return
+    }
+  }
+  
+  uploadError.value = ''
+  selectedFiles.value = [...selectedFiles.value, ...files]
+  
+  // Reset file input
+  if (fileInput.value) {
+    fileInput.value.value = ''
+  }
+}
 
+// Remove file from selection
+const removeFile = (index: number) => {
+  selectedFiles.value = selectedFiles.value.filter((_, i) => i !== index)
+}
 
+// Handle file upload and send message
+const uploadAndSendMessage = async () => {
+  if (!selectedFiles.value.length || !agent.value) return
+  
+  try {
+    const userId = authStore.user?.id
+    if (!userId) {
+      throw new Error('User ID not found')
+    }
+    
+    // Upload the files
+    const results = await uploadFiles(
+      agentId,
+      selectedFiles.value, 
+      userId,
+      (progress) => {} // We're using the reactive uploadProgress from useFiles
+    )
+    
+    // If files were uploaded successfully, compose message text
+    if (results.length > 0) {
+      // Create a message with file info
+      let messageContent = 'I\'ve shared the following files:\n'
+      results.forEach(file => {
+        messageContent += `- ${file.filename} (${formatFileSize(file.file_size)})\n`
+      })
+      
+      // Set the message input and send
+      messageInput.value = messageContent
+      await sendMessage()
+      
+      // Clear selected files
+      selectedFiles.value = []
+    }
+    
+  } catch (error) {
+    toast({
+      title: 'Error',
+      description: error instanceof Error ? error.message : 'Failed to upload files',
+      variant: 'destructive',
+    })
+  }
+}
 
 onMounted(async () => {
   agent.value = await getAgent(agentId)
@@ -450,15 +535,86 @@ onMounted(async () => {
       </div>
     </ScrollArea>
 
+    <!-- File Upload Progress Overlay -->
+    <div v-if="isFileUploading" class="fixed inset-0 bg-background/80 flex items-center justify-center z-50">
+      <div class="bg-card p-6 rounded-lg shadow-lg max-w-md w-full">
+        <h3 class="font-medium text-lg mb-4">Uploading Files...</h3>
+        <Progress :value="uploadProgress" class="w-full mb-2" />
+        <p class="text-sm text-muted-foreground">{{ uploadProgress }}% complete</p>
+      </div>
+    </div>
+
+    <!-- File selection panel -->
+    <div v-if="selectedFiles.length > 0" class="px-2 sm:px-4 pb-2">
+      <div class="bg-muted p-3 rounded-md">
+        <div class="flex justify-between items-center mb-2">
+          <h4 class="text-sm font-medium">Selected Files ({{ selectedFiles.length }})</h4>
+          <div class="flex gap-2">
+            <Button variant="outline" size="sm" @click="selectedFiles = []">
+              Cancel
+            </Button>
+            <Button size="sm" @click="uploadAndSendMessage" :disabled="isLoading || isFileUploading">
+              Upload & Send
+            </Button>
+          </div>
+        </div>
+        
+        <div v-if="uploadError" class="text-sm text-destructive mb-2">{{ uploadError }}</div>
+        
+        <div class="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-1">
+          <div 
+            v-for="(file, index) in selectedFiles" 
+            :key="index"
+            class="flex items-center bg-background rounded-md p-1.5 pr-2 text-xs"
+          >
+            <div class="w-6 h-6 flex items-center justify-center bg-muted rounded-md mr-1.5 text-[10px]">
+              {{ file.name.split('.').pop()?.toUpperCase() }}
+            </div>
+            <div class="truncate max-w-[100px]">{{ file.name }}</div>
+            <div class="text-muted-foreground ml-1.5">({{ formatFileSize(file.size) }})</div>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              class="h-5 w-5 ml-1"
+              @click="removeFile(index)"
+            >
+              <X class="h-3 w-3" />
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Message Input -->
-    <div class="border-t p-2 sm:p-4">
+    <div class="border-t pt-4">
       <form @submit.prevent="sendMessage" class="flex gap-2">
+        <!-- Add file upload button -->
+        <Button 
+          type="button" 
+          variant="ghost" 
+          size="icon" 
+          @click="fileInput?.click()"
+          :disabled="isLoading || isFileUploading" 
+          class="shrink-0"
+        >
+          <Paperclip class="h-4 w-4" />
+        </Button>
+        <!-- Hidden file input -->
+        <input 
+          type="file" 
+          ref="fileInput" 
+          multiple 
+          @change="handleFileSelect"
+          class="hidden" 
+          accept=".xlsx,.xls,.csv,.jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.txt,.json"
+        />
+
         <Input
           v-model="messageInput"
           placeholder="Type your message..."
           class="flex-1"
         />
-        <Button type="submit" size="icon">
+        <Button type="submit" size="icon" :disabled="isLoading || isFileUploading">
           <Send class="h-4 w-4" />
         </Button>
       </form>
@@ -494,5 +650,17 @@ onMounted(async () => {
   font-size: 0.875em;
   padding: 0.2em 0.4em;
   color: #e83e8c;
+}
+
+/* Add styles for file handling */
+.file-item-enter-active,
+.file-item-leave-active {
+  transition: all 0.3s ease;
+}
+
+.file-item-enter-from,
+.file-item-leave-to {
+  opacity: 0;
+  transform: translateY(10px);
 }
 </style>

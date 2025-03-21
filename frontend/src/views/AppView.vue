@@ -6,7 +6,7 @@ import AppSidebar from '@/components/AppSidebar.vue'
 <template>
   <SidebarProvider>
     <AppSidebar />
-    <main class="m-2 w-full">
+    <main class="mx-2 my-3 w-full">
       <SidebarTrigger />
       <RouterView />
     </main>
