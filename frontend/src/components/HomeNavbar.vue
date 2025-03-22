@@ -11,6 +11,8 @@ import {
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { LogIn, UserPlus, User } from 'lucide-vue-next'
+import { Button } from '@/components/ui/button'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -166,34 +168,37 @@ const components: { title: string, href: string, description: string }[] = [
     <div class="flex items-center space-x-4">
       <div v-if="authStore.isAuthenticated" class="flex items-center space-x-4">
         <div class="flex items-center space-x-2">
-          <div class="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-            <User class="w-4 h-4" />
-          </div>
+          <Avatar>
+            <AvatarFallback>
+              <User class="w-4 h-4" />
+            </AvatarFallback>
+          </Avatar>
           <span class="text-sm hidden md:inline">{{ authStore.user?.email }}</span>
         </div>
-        <button 
+        <Button 
           @click="navigateToDashboard" 
-          class="px-4 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 flex items-center"
+          class="flex items-center"
         >
           <LogIn class="w-4 h-4 mr-2" />
           <span>Dashboard</span>
-        </button>
+        </Button>
       </div>
       <div v-else class="flex items-center space-x-4">
-        <button 
+        <Button 
           @click="navigateToLogin" 
-          class="px-4 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 flex items-center"
+          class="flex items-center"
         >
           <LogIn class="w-4 h-4 mr-2" />
           <span>Login</span>
-        </button>
-        <button 
-          @click="navigateToRegister" 
-          class="px-4 py-2 rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/90 flex items-center"
+        </Button>
+        <Button 
+          @click="navigateToRegister"
+          variant="secondary" 
+          class="flex items-center"
         >
           <UserPlus class="w-4 h-4 mr-2" />
           <span>Register</span>
-        </button>
+        </Button>
       </div>
     </div>
   </div>

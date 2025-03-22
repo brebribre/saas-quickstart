@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Avatar } from '@/components/ui/avatar';
-import { MoreVertical, Pencil, Trash, MessageSquare, Bot, Search, FileText } from 'lucide-vue-next';
+import { MoreVertical, Pencil, Trash, MessageSquare, Bot, Search, FileText, Plus } from 'lucide-vue-next';
 import { useToast } from '@/components/ui/toast/use-toast';
 import { Separator } from '@/components/ui/separator'
 import {
@@ -20,12 +20,14 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { Input } from '@/components/ui/input';
+import CreateAgentDialog from '@/components/CreateAgentDialog.vue';
 
 const { toast } = useToast();
 const { listUserAgents, deleteAgent, loading, error } = useAgents();
 const { user } = useAuthStore();
 const agents = ref<Agent[]>([]);
 const searchQuery = ref('');
+const showCreateDialog = ref(false);
 
 const filteredAgents = computed(() => {
   if (!searchQuery.value) return agents.value;
@@ -69,6 +71,14 @@ const handleDeleteAgent = async (agentId: string) => {
   }
 };
 
+const handleAgentCreated = async (agentId: string) => {
+  await loadAgents();
+  toast({
+    title: 'Agent created',
+    description: 'Your new agent is ready to use.',
+  });
+};
+
 onMounted(() => {
   loadAgents();
 });
@@ -89,7 +99,8 @@ onMounted(() => {
             type="search"
           />
         </div>
-        <Button class="w-full sm:w-auto" @click="$router.push('/agents/create')">
+        <Button class="w-full sm:w-auto" @click="showCreateDialog = true">
+          <Plus class="h-4 w-4 mr-2" />
           Create New Agent
         </Button>
       </div>
@@ -246,11 +257,17 @@ onMounted(() => {
         <CardDescription>Get started by creating your first AI agent</CardDescription>
       </CardHeader>
       <CardFooter class="flex justify-center pt-2">
-        <Button @click="$router.push('/agents/create')">
+        <Button @click="showCreateDialog = true">
           Create Your First Agent
         </Button>
       </CardFooter>
     </Card>
+
+    <!-- Create Agent Dialog -->
+    <CreateAgentDialog 
+      v-model:open="showCreateDialog" 
+      @created="handleAgentCreated" 
+    />
   </div>
 </template>
 
